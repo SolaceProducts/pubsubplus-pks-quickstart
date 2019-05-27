@@ -1,0 +1,36 @@
+solace:
+  # true will create an HA deployment with Primary, Backup and Monitor nodes
+  redundancy: true
+
+  # connection scaling tier; dev allocates minimum resources, use prod for production
+  size: prod1k
+
+  # Leave password empty to autogenerate
+  # Obtain the password from the deployment using
+  #  kubectl get secret <deployment-name>-solace-secrets -o yaml | \
+  #    grep username_admin_password | awk '{print $2}' | base64 --decode
+  username_admin_password:
+
+image:
+  # use a specific version tag for production
+  repository: solace/solace-pubsub-standard
+  tag: latest
+
+  # Provide secret name if using secure image repo
+  imagePullSecret:
+
+service:
+  # options include ClusterIP, NodePort, LoadBalancer
+  type: LoadBalancer
+
+storage:
+  # false will use ephemeral storage and is not recommended for production use
+  persistent: true
+
+  # StorageClass must exist
+  useStorageClass: standard
+
+  # Refer to the Solace documentation for storage configuration
+  size: 20Gi
+
+  
