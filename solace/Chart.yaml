@@ -6,10 +6,10 @@ icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.
 maintainers:
   - name: support
     email: support@solace.com
-home: http://dev.solace.com
+home: https://github.com/SolaceProducts/solace-pks
 sources:
-   - https://github.com/SolaceProducts/solace-kubernetes-quickstart
+  - https://github.com/SolaceProducts/solace-pks
 keywords:
-- solace
-- pubsub+
-- message broker
+  - solace
+  - pubsub+
+  - message broker
