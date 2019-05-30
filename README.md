@@ -2,7 +2,7 @@
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a Pivotal Container Service (PKS) cluster.
+This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a [Pivotal Container Service (PKS)](https://cloud.vmware.com/pivotal-container-service ) cluster.
 
 The recommended Solace PubSub+ Software Message Broker version is 9.1 or later.
 
@@ -14,36 +14,48 @@ The Solace PubSub+ software message broker meets the needs of big data, cloud mi
 
 Solace PubSub+ software message brokers can be deployed in either a 3-node High-Availability (HA) cluster, or as a single node deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
 
-## How to deploy a message broker onto Kubernetes
+## How to deploy a message broker onto PKS
 
-In this quick start we go through the steps to set up a small-size message broker either as a single stand-alone instance, or in a 3-node HA cluster. If you are interested in other message broker configurations or sizes, refer to the [Deployment Configurations](#other-message-broker-deployment-configurations) section.
+In this quick start we go through the steps to set up a message broker either as a single stand-alone instance, or in a 3-node HA cluster.
 
-This is a 4 step process:
+### Step 1: Access to PKS
 
-### Step 1: 
+Perform any prerequisites to access PKS v1.4 or later in your target environment. For specific details, refer to your PKS platform's documentation.
 
-Perform any prerequisites to run Kubernetes in your target environment. These tasks may include creating a GCP project, installing [MiniKube](https://github.com/kubernetes/minikube/blob/master/README.md ), etc. You will also need following tools:
+Tasks may include:
 
-* Install [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/ ).
-* Installation of [`docker`](https://docs.docker.com/get-started/ ) may also be required depending on your environment.
+* Getting access to a platform which supports PKS, such as VMware Enterprise PKS
+* Install Kubernetes [`kubectl`](https://kubernetes.io/docs/tasks/tools/install-kubectl/ ) tool.
+* Install the PKS CLI client and logging in.
+* Creating a PKS cluster (for CPU and memory requirements of your Solace message broker target deployment configuration, refer to the [Deployment Configurations](#message-broker-deployment-configurations) section)
+* Configuring any necessary environment settings and installing certificates
+* Fetching the credentials for the PKS cluster
+* Configure access if using a specific  Docker image registry, such as Harbor
+* Configure access if using a specific Helm chart repository, such as Harbor
 
-### Step 2: 
+Verify access to your PKS cluster and the available nodes by running `kubectl get nodes -o wide` from your environment.
 
-Create a Kubernetes platform. This may be a single node or a multi-node cluster.
+### Step 2: Deploy Helm package manager
 
-* The recommended requirements for the smallest message broker deployment (`dev100`) is 2 CPUs and 2 GBs of memory available for each message broker node. For requirements supporting larger deployments, refer to the [Other Message Broker Deployment Configurations](#other-message-broker-deployment-configurations) section.
+We recommend using the [Kubernetes Helm](//github.com/kubernetes/helm/blob/master/README.md ) tool to manage the deployment.
 
-> Note: If using MiniKube, `minikube start` will also setup Kubernetes. By default it will start with 2 CPU and 2 GB memory allocated. For more granular control, use the `--cpus` and `--memory` options.
+This GitHub repo provides a helper script which will install, setup and configure Helm in your environment if not already there.
 
-Before continuing, ensure the `kubectl get svc` command returns the `kubernetes` service listed.
+Clone this repo and execute the `setup_helm` script:
+```sh
+mkdir ~/workspace; cd ~/workspace
+git clone https://github.com/SolaceProducts/solace-pks.git
+cd solace-pks    # repo root directory
+./scripts/setup_helm.sh
+```
 
-### Step 3 (Optional): 
+### Step 3 (Optional): Load the Solace Docker image to a 
+
+**Hint:** You may skip the rest of this step if not using a specific Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [Solace public Docker Hub registry](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), in this case the docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`.
 
 Obtain the Solace PubSub+ message broker docker image and load it into a [docker container registry](https://docs.docker.com/registry/ ).
+* Installation of [`docker`](https://docs.docker.com/get-started/ ) may also be required if you are .
 
-**Hint:** You may skip the rest of this step if using the free PubSub+ Standard Edition available from the [Solace public Docker Hub registry](https://hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). The docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`. 
-
-> Note: If using MiniKube you can [reuse its docker daemon](https://github.com/kubernetes/minikube/blob/master/docs/reusing_the_docker_daemon.md ) and load the image into the local registry.
 
 To get the message broker docker image, go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **docker** image or obtain your version from Solace Support.
 
@@ -58,7 +70,7 @@ To load the docker image into a docker registry, follow the steps specific to th
 
 Deploy message broker Pods and Service to the cluster.
 
-The [Kubernetes Helm](https://github.com/kubernetes/helm/blob/master/README.md ) tool is used to manage this deployment. A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
+A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates.
 
 The following diagram illustrates the template structure used for the Solace Deployment chart. Note that the minimum is shown in this diagram to give you some background regarding the relationships and major functions.
 
@@ -370,7 +382,7 @@ service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            
 
 > Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `kubectl delete` to delete those.
 
-## Other Message Broker Deployment Configurations
+## Message Broker Deployment Configurations
 
 The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several deployment configurations:
 
