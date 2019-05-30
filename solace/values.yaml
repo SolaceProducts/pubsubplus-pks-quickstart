@@ -16,13 +16,26 @@ image:
   # repository is the Docker repouse a specific version tag for production
   repository: solace/solace-pubsub-standard
   tag: latest
-  pullPolicy: IfNotPresent
+  
+  # Specify if not using default IfNotPresent
+  # pullPolicy: IfNotPresent
+  
   # Provide secret name if using secure image repo
-  pullSecret:
+  # pullSecret:
 
 service:
   # Options include ClusterIP, NodePort, LoadBalancer
   type: LoadBalancer
+  
+  # Already exposing frequently-used ports. List here additional ports to expose (need both external and internal)
+  # addExternalPort:
+  #   - port: 1883
+  #     protocol: TCP
+  #     name: mqtt
+  #     targetport: 1883
+  # addInternalPort:
+  #   - port: 1883
+  #     protocol: TCP
 
 storage:
   # Persistence set to false will use ephemeral storage and the rest of the storage params will be ignored

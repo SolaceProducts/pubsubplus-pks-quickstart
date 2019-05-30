@@ -43,6 +43,12 @@ spec:
     targetPort: 60443
     protocol: TCP
     name: webtls
+  {{- range $item := .Values.service.addExternalPort }}
+  - port: {{ $item.port }}
+    targetPort: {{ $item.targetport }}
+    protocol: {{ $item.protocol }}
+    name: {{ $item.name }}
+  {{- end}}
   selector:
     app: {{ template "solace.name" . }}
     release: {{ .Release.Name }}

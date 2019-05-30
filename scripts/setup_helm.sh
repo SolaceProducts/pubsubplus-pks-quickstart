@@ -18,25 +18,13 @@
 # The purpose of this script is to:
 #  - install the required version of helm
 
-# Initialize our own variables:
-verbose=0
-
-# Read options
-OPTIND=1         # Reset in case getopts has been used previously in the shell.
-
-shift $((OPTIND-1))
-[ "$1" = "--" ] && shift
-
-verbose=1
-echo "`date` INFO: Leftovers: $@"
-
 # kubectl installed is a pre-requisite
 exists()
 {
   command -v "$1" >/dev/null 2>&1
 }
 if exists kubectl; then
-  echo 'kubectl exists!'
+  echo 'kubectl exists'
 else
   echo 'kubectl not found on the PATH'
   echo '	Please install kubectl (see https://kubernetes.io/docs/tasks/tools/install-kubectl/)'
@@ -50,7 +38,7 @@ os_type=`uname`
 case ${os_type} in 
   "Darwin" )
     helm_type="darwin-amd64"
-    helm_version="v2.9.1"
+    helm_version="v2.14.0"
     archive_extension="tar.gz"
     sed_options="-E -i.bak"
     sudo_command="sudo"
@@ -58,7 +46,7 @@ case ${os_type} in
     ;;
   "Linux" )
     helm_type="linux-amd64"
-    helm_version="v2.9.1"
+    helm_version="v2.14.0"
     archive_extension="tar.gz"
     sed_options="-i.bak"
     sudo_command="sudo"
@@ -66,7 +54,7 @@ case ${os_type} in
     ;;
   *_NT* ) # BASH emulation on windows
     helm_type="windows-amd64"
-    helm_version=v2.9.1
+    helm_version="v2.14.0"
     archive_extension="zip"
     sed_options="-i.bak"
     sudo_command=""
@@ -83,6 +71,7 @@ elif [[ "$helm_type" != "windows-amd64" ]]; then
 	popd
 	echo "`date` INFO: Installed helm $(helm version --client --short)"
 else
+  echo 'helm not found on the PATH'
 	echo "Automated install of helm is not supported on Windows. Please refer to https://github.com/helm/helm#install to install it manually then re-run this script."
 	exit  -1
 fi
@@ -103,7 +92,7 @@ else
     kubectl create serviceaccount --namespace kube-system tiller
     # Requires account/service account to have add-iam-policy-binding to "roles/container.admin"
     kubectl create clusterrolebinding tiller-cluster-rule --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    helm init --service-account tiller
+    helm init --skip-refresh --upgrade --service-account tiller
   fi
 fi
 
@@ -117,7 +106,7 @@ echo "`date` INFO: READY TO DEPLOY Solace PubSub+ TO CLUSTER"
 echo "#############################################################"
 echo "Next steps to complete the deployment:"
 if [[ "$(pwd)" != *solace-pks/solace ]]; then
-  echo "cd solace-pks/solace  # replace with the path to your chart"
+  echo "cd solace  # replace with the path to your \"solace\" chart"
 fi
 echo "helm install . -f values.yaml"
 echo "watch kubectl get pods --show-labels"

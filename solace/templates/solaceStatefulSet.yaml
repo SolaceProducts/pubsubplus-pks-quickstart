@@ -27,7 +27,7 @@ spec:
       containers:
       - name: {{ .Chart.Name }}
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
         resources:
           requests:
 {{- if eq .Values.solace.size "dev" }}
@@ -130,6 +130,10 @@ spec:
           protocol: TCP
         - containerPort: 60443
           protocol: TCP
+        {{- range $item := .Values.service.addInternalPort }}
+        - containerPort: {{ $item.port }}
+          protocol: {{ $item.protocol }}
+        {{- end}}
       volumes:
         - name: config-map
           configMap:
@@ -146,7 +150,7 @@ spec:
   {{- if not .Values.storage.persistent }}
         - name: data
           emptyDir: {}
-  {{ else }}
+  {{- else }}
   volumeClaimTemplates:
   - metadata:
       name: data
