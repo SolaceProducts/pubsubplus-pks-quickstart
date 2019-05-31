@@ -13,21 +13,22 @@ solace:
   usernameAdminPassword:
 
 image:
-  # repository is the Docker repouse a specific version tag for production
+  # Default repository is the public Solace DockerHub repo
   repository: solace/solace-pubsub-standard
+  # Recommending to use a specific version tag for production
   tag: latest
   
   # Specify if not using default IfNotPresent
   # pullPolicy: IfNotPresent
   
   # Provide secret name if using secure image repo
-  # pullSecret:
+  # pullSecretName:
 
 service:
-  # Options include ClusterIP, NodePort, LoadBalancer
+  # specifies how to expose the service: options include ClusterIP, NodePort, LoadBalancer (default if not specified)
   type: LoadBalancer
   
-  # Already exposing frequently-used ports. List here additional ports to expose (need both external and internal)
+  # Already exposing frequently-used ports. List here additional ports to expose (define both external and internal)
   # addExternalPort:
   #   - port: 1883
   #     protocol: TCP

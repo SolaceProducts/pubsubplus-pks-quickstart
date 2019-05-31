@@ -20,9 +20,9 @@ spec:
         app: {{ template "solace.name" . }}
         release: {{ .Release.Name }}
     spec:
-{{- if .Values.image.pullSecret }}
+{{- if .Values.image.pullSecretName }}
       imagePullSecrets:
-      - name: {{ .Values.image.pullSecret}}
+      - name: {{ .Values.image.pullSecretName}}
 {{- end}}
       containers:
       - name: {{ .Chart.Name }}

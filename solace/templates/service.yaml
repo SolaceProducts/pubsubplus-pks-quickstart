@@ -9,7 +9,7 @@ metadata:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     app: {{ template "solace.name" . }}
 spec:
-  type: {{.Values.service.type}}
+  type: {{.Values.service.type | default "LoadBalancer"}}
   ports:
   - port: 22
     targetPort: 2222
