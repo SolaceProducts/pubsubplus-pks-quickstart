@@ -86,8 +86,8 @@ A deployment is defined by a "Helm chart", which consists of templates and value
 
 For the "solace" Helm chart the values are in the `values.yaml` file located in the `solace` directory:
 ```sh
-cd ~/workspace/solace-pks/solace
-more values.yaml
+cd ~/workspace/solace-pks
+more solace/values.yaml
 ``` 
 
 Update: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -95,26 +95,26 @@ For a description of all value configuration properties, refer to section XYZ
 
 When Helm is used to install a deployment the configuration properties can be set in several ways, in combination of the followings:
 
-* By default, if no other values file is specified, settings from the `values.yaml` in the chart directory is used
+* By default, if no other values-file is specified, settings from the `values.yaml` in the chart directory is used.
 ```sh
-# <chart-location>: directory path, url or Helm repo reference to the chart
-helm install <chart-location>  
+  # <chart-location>: directory path, url or Helm repo reference to the chart
+  helm install <chart-location>  
 ```
-* Settings can be taken from a specified values file; multiple can be specified in a sequence with left-to-right overriding/complementing previous ones, beginning from `values.yaml` in the chart directory. A values file may define only a subset of values.
+* Settings can be taken from a specified values-file; multiple can be specified in a sequence with left-to-right overriding/complementing previous ones, beginning from `values.yaml` in the chart directory. A values file may define only a subset of values.
 ```sh
-# <my-values-file>: directory path to a values filehelm
-helm install -f <my-values-file> <chart-location>
+  # <my-values-file>: directory path to a values filehelm
+  helm install -f <my-values-file> <chart-location>
 ```
 * Explicitly overriding settings
 ```sh
-# overrides the setting in values.yaml in the chart directory, can pass multiple
-helm install <chart-location> --set <param1>=<value1>[,<param2>=<value2>]
+  # overrides the setting in values.yaml in the chart directory, can pass multiple
+  helm install <chart-location> --set <param1>=<value1>[,<param2>=<value2>]
 ```
 
 Helm will generate a release name is not specified. Here is how to specify it:
 ```sh
-# Helm will reference this deployment as "my-solace-ha-release"
-helm install --name my-solace-ha-release <chart-location>
+  # Helm will reference this deployment as "my-solace-ha-release"
+  helm install --name my-solace-ha-release <chart-location>
 ```
 
 Check for dependencies before going ahead with a deployment: the Solace deployment may depend on the presence of Kubernetes objects, such as a StorageClass and ImagePullSecrets. These need to be created first if required.
@@ -436,108 +436,14 @@ service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            
 
 ## Message Broker Deployment Configurations
 
-The `solace-kubernetes-quickstart/solace/values-examples` directory provides examples for `values.yaml` for several deployment configurations:
+The solace mesage broker can be deployed in following scaling:
 
-* `dev100-direct-noha` (default if no argument provided): for development purposes, supports up to 100 connections, non-HA, simple local non-persistent storage
-* `prod1k-direct-noha`: production, up to 1000 connections, non-HA, simple local non-persistent storage
-* `prod1k-direct-noha-existingVolume`: production, up to 1000 connections, non-HA, bind the PVC to an existing external volume in the network
-* `prod1k-direct-noha-localDirectory`: production, up to 1000 connections, non-HA, bind the PVC to a local directory on the host node
-* `prod1k-direct-noha-provisionPvc`: production, up to 1000 connections, non-HA, bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
-* `prod1k-persist-ha-provisionPvc`: production, up to 1000 connections, HA, to bind the PVC to a provisioned PersistentVolume (PV) in Kubernetes
-* `prod1k-persist-ha-nfs`: production, up to 1000 connections, HA, to dynamically bind the PVC to an NFS volume provided by an NFS server, exposed as storage class `nfs`. Note: "root_squash" configuration is supported on the NFS server.
-
-Similar value-files can be defined extending above examples:
-
-- To open up more service ports for external access, add new ports to the `externalPort` list. For a list of available services and default ports refer to [Software Message Broker Configuration Defaults](//docs.solace.com/Configuring-and-Managing/SW-Broker-Specific-Config/SW-Broker-Configuration-Defaults.htm) in the Solace customer documentation.
-
-- It is also possible to configure the message broker deployment with different CPU and memory resources to support more connections per message broker, by changing the solace `size` in `values.yaml`. The Kubernetes host node resources must be also provisioned accordingly.
-
-    * `dev100` (default): up to 100 connections, minimum requirements: 1 CPU, 1 GB memory
+    * `dev`: for development purposes, no guaranteed performance. Minimum requirements: 1 CPU, 1 GB memory
     * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
     * `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 4 GB memory
     * `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12 GB memory
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
-
-## Alternative installation: generating templates for Kubernetes Kubectl tool
-
-This is for users not wishing to install the Helm server-side Tiller on the Kubernetes cluster.
-
-This method will first generate installable Kubernetes templates from this project's Helm charts, then the templates can be installed using the Kubectl tool.
-
-### Step 1: Generate Kubernetes templates for Solace message broker deployment
-
-1) Clone this project:
-
-```sh
-git clone //github.com/SolaceProducts/solace-kubernetes-quickstart.git
-cd solace-kubernetes-quickstart # This directory will be referenced as <project-root>
-```
-
-2) [Download](//github.com/helm/helm/releases/tag/v2.9.1 ) and install the Helm client locally.
-
-We will assume that it has been installed to the `<project-root>/bin` directory.
-
-3) Customize the Solace chart for your deployment
-
-The Solace chart includes raw Kubernetes templates and a "values.yaml" file to customize them when the templates are generated.
-
-The chart is located in the `solace` directory:
-
-`cd <project-root>/solace`
-
-a) Optionally replace the `<project-root>/solace/values.yaml` file with one of the prepared examples from the `<project-root>/solace/values-examples` directory. For details refer to the [Other Deployment Configurations section](#other-message-broker-deployment-configurations) in this document.
-
-b) Then edit `<project-root>/solace/values.yaml` and replace following parameters:
-
-SOLOS_CLOUD_PROVIDER: Current options are "gcp" or "aws" or leave it unchanged for unknown (note: specifying the provider will optimize volume provisioning for supported providers).
-<br/>
-SOLOS_IMAGE_REPO and SOLOS_IMAGE_TAG: use `solace/solace-pubsub-standard` and `latest` for the latest available or specify a [version from DockerHub](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For more options, refer to the [Solace PubSub+ message broker docker image section](#step-3-optional) in this document. 
-
-c) Configure the Solace management password for `admin` user in `<project-root>/solace/templates/secret.yaml`:
-
-SOLOS_ADMIN_PASSWORD: change it to the desired password, considering the [password rules](//docs.solace.com/Configuring-and-Managing/Configuring-Internal-CLI-User-Accounts.htm#Changing-CLI-User-Passwords ).
-
-4) Generate the templates
-
-```sh
-cd <project-root>/solace
-# Create location for the generated templates
-mkdir generated-templates
-# In next command replace myrelease to the desired release name
-<project-root>/bin/helm template --name myrelease --values values.yaml --output-dir ./generated-templates .
-```
-
-The generated set of templates are now available in the `<project-root>/solace/generated-templates` directory.
-
-### Step 2: Deploy the templates on the target system
-
-Assumptions: `kubectl` is deployed and configured to point to your Kubernetes cluster
-
-1) Optionally copy the `generated-templates` directory with contents if this is on a different host
-
-2) Assign rights to current user to modify cluster-wide RBAC (required for creating clusterrole binding when deploying the Solace template podModRbac.yaml)
-
-Example:
-
-```sh
-# Get current user - GCP example. Returns e.g.: myname@example.org
-gcloud info | grep Account  
-# Assign rigths - replace user
-kubectl create clusterrolebinding myname-cluster-admin-binding \
-  --clusterrole=cluster-admin \
-  --user=myname@example.org
-```
-
-3) Initiate the deployment:
-
-`kubectl apply --recursive -f ./generated-templates/solace`
-
-Wait for the deployment to complete, which is then ready to use.
-
-4) To delete deployment, execute:
-
-`kubectl delete --recursive -f ./generated-templates/solace`
 
 
 ## Contributing
