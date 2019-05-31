@@ -14,7 +14,7 @@ The following table lists the configurable parameters of the Solace chart and th
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                          | `LoadBalancer`                                        |
 | `service.addExternalPort`      | Use to define additional Solace pod port exposed externally, with mapping                             | not set                                               |
 | `service.addInternalPort`      | For addExternalPort, enable Solace pod port to be exposed at the pod level first                      | not set                                               |
-| `storage.persistent`           | false to use ephemeral storage at pod level; tru to request persistent storage through a StorageClass | true, false is not recommended for production use     |
+| `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use |
 | `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                             | `standard`                                            |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `20Gi`                                  |
 
