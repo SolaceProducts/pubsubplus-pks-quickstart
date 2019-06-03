@@ -96,7 +96,7 @@ cd ~/workspace/solace-pks
 more solace/values.yaml
 ``` 
 
-For a description of all value configuration properties, refer to section [Solace Helm Chart Configuration](#SolaceHelmChartConfig)
+For a description of all value configuration properties, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 When Helm is used to install a deployment the configuration properties can be set in several ways, in combination of the followings:
 
@@ -416,8 +416,7 @@ The solace mesage broker can be deployed in following scaling:
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
     
 <a name="SolaceHelmChartConfig"></a>
-{% include_relative solace/README.md %}
-Refer to [SolaceHelmChartConfig](./solace)
+Also refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 ## Contributing
 
