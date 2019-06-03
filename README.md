@@ -241,13 +241,7 @@ Endpoints:                10.200.9.25:55555
 :
 ```
 
-The most frequently used service ports including management and messaging are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying/upgrading the message broker cluster](#SolClusterModifyUpgrade )
-
-## Available ports
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Refer to //docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm
+The most frequently used service ports including management and messaging are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying/upgrading the message broker cluster](#SolClusterModifyUpgrade ).
 
 ## Gaining admin access to the message broker
 
@@ -340,59 +334,25 @@ To upgrade/modify the message broker cluster, make the required modifications to
 
 ### Modifying the cluster
 
-Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
+To **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
 ```
 cd ~/workspace/solace-kubernetes-quickstart/solace
 tee ./port-update.yaml <<-EOF   # create update file with following contents:
 service:
-  internal: false
-  type: LoadBalancer
-  externalPort:
+  addExternalPort:
     - port: 1883
       protocol: TCP
       name: mqtt
       targetport: 1883
-    - port: 22
-      protocol: TCP
-      name: ssh
-      targetport: 2222
-    - port: 8080
-      protocol: TCP
-      name: semp
-    - port: 55555
-      protocol: TCP
-      name: smf
-    - port: 943
-      protocol: TCP
-      name: semptls
-      targetport: 60943
-    - port: 80
-      protocol: TCP
-      name: web
-      targetport: 60080
-    - port: 443
-      protocol: TCP
-      name: webtls
-      targetport: 60443
-  internalPort:
-    - port: 2222
-      protocol: TCP
-    - port: 8080
-      protocol: TCP
-    - port: 55555
-      protocol: TCP
-    - port: 60943
-      protocol: TCP
-    - port: 60080
-      protocol: TCP
-    - port: 60443
-      protocol: TCP
+  addInternalPort:
     - port: 1883
       protocol: TCP
 EOF
 helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 ```
+
+For information about ports used refer to the [Solace documentation](Refer to //docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm )
 
 ### Upgrading the cluster
 
