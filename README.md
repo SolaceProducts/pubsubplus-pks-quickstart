@@ -71,7 +71,7 @@ sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
 # Option b): You can use the public Solace Docker image from Docker Hub
 sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
 
-# Verify image has been loaded, note "IMAGE ID"
+# Verify image has been loaded, note the "IMAGE ID"
 sudo docker images
 ```
 * Login to the private registry
@@ -90,13 +90,13 @@ Note that additional steps may be required if using signed images.
 
 A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates. The generic [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart#step-4 ) provides additional details about the templates used.
 
-For the "solace" Helm chart the values are in the `values.yaml` file located in the `solace` directory:
+For the "solace" Helm chart the default values are in the `values.yaml` file located in the `solace` directory:
 ```sh
 cd ~/workspace/solace-pks
 more solace/values.yaml
 ``` 
 
-For a description of all value configuration properties, refer to section [Solace Helm Chart Configuration]((#SolaceHelmChartConfig)
+For a description of all value configuration properties, refer to section [Solace Helm Chart Configuration](#SolaceHelmChartConfig)
 
 When Helm is used to install a deployment the configuration properties can be set in several ways, in combination of the followings:
 
@@ -457,6 +457,7 @@ The solace mesage broker can be deployed in following scaling:
     
 <a name="SolaceHelmChartConfig"></a>
 {% include_relative solace/README.md %}
+![SolaceHelmChartConfig](solace/README.md)
 
 ## Contributing
 
