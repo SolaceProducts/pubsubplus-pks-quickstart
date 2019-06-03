@@ -352,7 +352,7 @@ EOF
 helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 ```
 
-For information about ports used refer to the [Solace documentation](Refer to //docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm )
+For information about ports used refer to the [Solace documentation](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm )
 
 ### Upgrading the cluster
 
@@ -417,7 +417,7 @@ The solace mesage broker can be deployed in following scaling:
     
 <a name="SolaceHelmChartConfig"></a>
 {% include_relative solace/README.md %}
-![SolaceHelmChartConfig](solace/README.md)
+Refer to [SolaceHelmChartConfig](solace/README.md)
 
 ## Contributing
 
