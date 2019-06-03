@@ -30,8 +30,8 @@ Tasks may include:
 * Create a PKS cluster (for CPU and memory requirements of your Solace message broker target deployment configuration, refer to the [Deployment Configurations](#message-broker-deployment-configurations) section)
 * Configure any necessary environment settings and install certificates
 * Fetch the credentials for the PKS cluster
-* Perform any necessary setup and configure access if using a specific Docker image registry, such as Harbor
-* Perform any necessary setup and configure access if using a specific Helm chart repository, such as Harbor
+* Perform any necessary setup and configure access if using a private Docker image registry, such as Harbor
+* Perform any necessary setup and configure access if using a Helm chart repository, such as Harbor
 
 Verify access to your PKS cluster and the available nodes by running `kubectl get nodes -o wide` from your environment.
 
@@ -49,9 +49,9 @@ cd solace-pks    # repo root directory
 ./scripts/setup_helm.sh
 ```
 
-### Step 3 (Optional): Load the Solace Docker image to a Docker image registry
+### Step 3 (Optional): Load the Solace Docker image to a private Docker image registry
 
-**Hint:** You may skip the rest of this step if not using a specific Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), in this case the docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`.
+**Hint:** You may skip the rest of this step if not using a private Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For public Docker Hub the docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`.
 
 To get the Solace message broker Docker image, go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **docker** image or obtain your version from Solace Support.
 
@@ -63,24 +63,30 @@ To get the Solace message broker Docker image, go to the Solace Developer Portal
 To load the Docker image tar archive file into a docker registry, follow the steps specific to the registry you are using.
 
 This is a general example:
-* [`docker`](//docs.docker.com/get-started/ ) is required
+* Local installation of [`docker`](//docs.docker.com/get-started/ ) is required
 * First load the image to the local docker registry:
 ```
+# Option a): If you have a tar.gz Docker image file
 sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
+# Option b): You can use the public Solace Docker image from Docker Hub
+sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
+
 # Verify image has been loaded, note "IMAGE ID"
 sudo docker images
 ```
-* Login to the target registry
-`sudo docker login <target-registry> ...`
-* Tag the image with the targeted name and tag
-`sudo docker tag <image-id> <target-registry>/<path>/<image-name>:<tag>`
-* Push the image to the target registry
-`sudo docker push <target-registry>/<path>/<image-name>:<tag>`
+* Login to the private registry
+`sudo docker login <private-registry> ...`
+* Tag the image with the desired name and tag
+`sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>`
+* Push the image to the private registry
+`sudo docker push <private-registry>/<path>/<image-name>:<tag>`
 
 Note that additional steps may be required if using signed images.
 
 
 ### Step 4: Deploy message broker Pods and Service to the cluster
+
+#### Overview
 
 A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates. The generic [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart#step-4 ) provides additional details about the templates used.
 
@@ -90,20 +96,19 @@ cd ~/workspace/solace-pks
 more solace/values.yaml
 ``` 
 
-Update: @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-For a description of all value configuration properties, refer to section XYZ
+For a description of all value configuration properties, refer to section [Solace Helm Chart Configuration]((#SolaceHelmChartConfig)
 
 When Helm is used to install a deployment the configuration properties can be set in several ways, in combination of the followings:
 
-* By default, if no other values-file is specified, settings from the `values.yaml` in the chart directory is used.
+* By default, if no other values-file or override is specified, settings from the `values.yaml` in the chart directory is used.
 ```sh
   # <chart-location>: directory path, url or Helm repo reference to the chart
-  helm install <chart-location>  
+  helm install <chart-location>
 ```
-* Settings can be taken from a specified values-file; multiple can be specified in a sequence with left-to-right overriding/complementing previous ones, beginning from `values.yaml` in the chart directory. A values file may define only a subset of values.
+* The default `values.yaml` can be overlayed by one or more specified values-files; each additional file overrides settings in the previous one. A values file may define only a subset of values.
 ```sh
-  # <my-values-file>: directory path to a values filehelm
-  helm install -f <my-values-file> <chart-location>
+  # <my-values-file>: directory path to a values file
+  helm install -f <my-values-file1>[ -f <my-values-file2>] <chart-location>
 ```
 * Explicitly overriding settings
 ```sh
@@ -111,7 +116,7 @@ When Helm is used to install a deployment the configuration properties can be se
   helm install <chart-location> --set <param1>=<value1>[,<param2>=<value2>]
 ```
 
-Helm will generate a release name is not specified. Here is how to specify it:
+Helm will autogenerate a release name if not specified. Here is how to specify a release name:
 ```sh
   # Helm will reference this deployment as "my-solace-ha-release"
   helm install --name my-solace-ha-release <chart-location>
@@ -142,7 +147,7 @@ ImagePullSecrets may be required if using signed images from a private Docker re
 Here is an example of creating a secret. Refer to your registry's documentation for the specific details of use.
 
 ```sh
-kubectl create secret docker-registry <pull-secret-name> --dockerserver=<target-registry-server> \
+kubectl create secret docker-registry <pull-secret-name> --dockerserver=<private-registry-server> \
   --docker-username=<registry-user-name> --docker-password=<registry-user-password> \
   --docker-email=<registry-user-email>
 ```
@@ -157,8 +162,9 @@ The default values in the `values.yaml` file in this repo configure a small sing
 
 ```sh
 cd ~/workspace/solace-pks/solace
-# Use contents of values.yaml and override the admin password
-helm install --name my-solace-nonha-release . --set solace.redundancy=false,solace.usernameAdminPassword=Ch@ngeMe!
+# Use contents of default values.yaml and override redundancy (if needed) and the admin password
+helm install . --name my-solace-nonha-release \
+               --set solace.redundancy=false,solace.usernameAdminPassword=Ch@ngeMe
 # Wait until the pod is running and ready and the active message broker pod label is "active=true"
 watch kubectl get pods --show-labels
 ```
@@ -169,61 +175,73 @@ The only difference to the non-HA deployment in the simple case is to set `solac
 
 ```sh
 cd ~/workspace/solace-pks/solace
-# Use contents of values.yaml and override the admin password
-helm install --name my-solace-ha-release . -f values.yaml --set solace.redundancy=true,solace.usernameAdminPassword=Ch@ngeMe!
+# Use contents of values.yaml and override redundancy (if needed) and the admin password
+helm install . --name my-solace-ha-release \
+               --set solace.redundancy=true,solace.usernameAdminPassword=Ch@ngeMe
 # Wait until all pods running and ready and the active message broker pod label is "active=true"
 watch kubectl get pods --show-labels
 ```
 
-To modify a deployment, refer to the section [Upgrading/modifying the message broker cluster](#upgradingmodifying-the-message-broker-cluster). If you need to start over then refer to the section [Deleting a deployment](#deleting-a-deployment).
+To modify a deployment, refer to section [Upgrading/modifying the message broker cluster](#SolClusterModifyUpgrade ). If you need to start over then refer to section [Deleting a deployment](#deleting-a-deployment).
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name that Helm dynamically generates, e.g: "tinseled-lamb".
+Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-solace-ha-release".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
-NAME                                 DESIRED   CURRENT   AGE
-statefulsets/XXX-XXX-solace   3         3         3m
-NAME                                  TYPE           CLUSTER-IP      EXTERNAL-IP      PORT(S)                                       AGE
-svc/XXX-XXX-solace             LoadBalancer   10.15.249.186   35.202.131.158   22:32656/TCP,8080:32394/TCP,55555:31766/TCP   3m
-svc/XXX-XXX-solace-discovery   ClusterIP      None            <none>           8080/TCP                                      3m
-svc/kubernetes                        ClusterIP      10.15.240.1     <none>           443/TCP                                       6d
-NAME                         READY     STATUS    RESTARTS   AGE
-po/XXX-XXX-solace-0   1/1       Running   0          3m
-po/XXX-XXX-solace-1   1/1       Running   0          3m
-po/XXX-XXX-solace-2   1/1       Running   0          3m
-NAME                               STATUS    VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS              AGE
-pvc/data-XXX-XXX-solace-0   Bound     pvc-74d9ceb3-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
-pvc/data-XXX-XXX-solace-1   Bound     pvc-74dce76f-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
-pvc/data-XXX-XXX-solace-2   Bound     pvc-74e12b36-d492-11e7-b95e-42010a800173   30Gi       RWO            XXX-XXX-standard   3m
-NAME                                          CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS    CLAIM                                  STORAGECLASS              REASON    AGE
-pv/pvc-74d9ceb3-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-0   XXX-XXX-standard             3m
-pv/pvc-74dce76f-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-1   XXX-XXX-standard             3m
-pv/pvc-74e12b36-d492-11e7-b95e-42010a800173   30Gi       RWO            Delete           Bound     default/data-XXX-XXX-solace-2   XXX-XXX-standard             3m
+NAME                              READY   AGE
+statefulset.apps/XXX-XXX-solace   3/3     9m57s
 
+NAME                               TYPE           CLUSTER-IP       EXTERNAL-IP       PORT(S)                                                                                                                AGE
+service/kubernetes                 ClusterIP      10.100.200.1     <none>            443/TCP                                                                                                                24d
+service/XXX-XXX-solace             LoadBalancer   10.100.200.209   104.197.193.161   22:32650/TCP,8080:31816/TCP,55555:31692/TCP,55003:32625/TCP,55443:32588/TCP,943:30580/TCP,80:30672/TCP,443:32736/TCP   9m57s
+service/XXX-XXX-solace-discovery   ClusterIP      None             <none>            8080/TCP                                                                                                               9m57s
+
+NAME                   READY   STATUS    RESTARTS   AGE
+pod/XXX-XXX-solace-0   1/1     Running   0          9m57s
+pod/XXX-XXX-solace-1   1/1     Running   0          9m57s
+pod/XXX-XXX-solace-2   1/1     Running   0          9m57s
+
+NAME                                          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/data-XXX-XXX-solace-0   Bound    pvc-3c294e76-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
+persistentvolumeclaim/data-XXX-XXX-solace-1   Bound    pvc-3c2c5d8b-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
+persistentvolumeclaim/data-XXX-XXX-solace-2   Bound    pvc-3c310ba4-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
+
+NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                           STORAGECLASS   REASON   AGE
+persistentvolume/pvc-3c294e76-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-solace-0   standard                9m44s
+persistentvolume/pvc-3c2c5d8b-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-solace-1   standard                9m44s
+persistentvolume/pvc-3c310ba4-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-solace-2   standard                9m54s
 
 prompt:~$ kubectl describe service XXX-XX-solace
 Name:                     XXX-XXX-solace
 Namespace:                default
 Labels:                   app=solace
-                          chart=solace-0.3.0
+                          chart=solace-1.0.1
                           heritage=Tiller
                           release=XXX-XXX
 Annotations:              <none>
 Selector:                 active=true,app=solace,release=XXX-XXX
 Type:                     LoadBalancer
-IP:                       10.55.246.5
-LoadBalancer Ingress:     35.202.131.158
+IP:                       10.100.200.209
+LoadBalancer Ingress:     104.197.193.161
 Port:                     ssh  22/TCP
 TargetPort:               2222/TCP
-NodePort:                 ssh  30828/TCP
-Endpoints:                10.52.2.6:2222
+NodePort:                 ssh  32650/TCP
+Endpoints:                10.200.9.25:2222
+Port:                     semp  8080/TCP
+TargetPort:               8080/TCP
+NodePort:                 semp  31816/TCP
+Endpoints:                10.200.9.25:8080
+Port:                     smf  55555/TCP
+TargetPort:               55555/TCP
+NodePort:                 smf  31692/TCP
+Endpoints:                10.200.9.25:55555
 :
 :
 ```
 
-Generally, all services including management and messaging are accessible through a Load Balancer. In the above example `35.202.131.158` is the Load Balancer's external Public IP to use.
+The most frequently used service ports including management and messaging are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying/upgrading the message broker cluster](#SolClusterModifyUpgrade )
 
 ## Available ports
 
@@ -233,9 +251,9 @@ Refer to //docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm
 
 ## Gaining admin access to the message broker
 
-Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The WebUI is the recommended simplest way to administer the message broker for common tasks.
+Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The Solace PubSub+ Manager is recommended for manual administration tasks and SEMP API for programmatic configuration.
 
-### WebUI, SolAdmin and SEMP access
+### Solace PubSub+ Manager and SEMP API access
 
 Use the Load Balancer's external Public IP at port 8080 to access these services.
 
@@ -245,7 +263,7 @@ If you are using a single message broker and are used to working with a CLI mess
 
 ```sh
 
-$ssh -p 22 admin@35.202.131.158
+$ssh -p 22 admin@104.197.193.161
 Solace PubSub+ Standard
 Password:
 
@@ -316,49 +334,9 @@ To test data traffic though the newly created message broker instance, visit the
 
 Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
-## Upgrading/modifying the message broker cluster
+## <a name="SolClusterModifyUpgrade"></a> Modifying/upgrading the message broker cluster
 
 To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
-
-### Restoring Helm if not available
-
-Before getting into the details of how to make changes to a deployment, it shall be noted that when using a new machine to access the deployment the Helm client may not be available or out of sync with the server. This can be the case when e.g. using cloud shell, which may be terminated any time.
-
-To restore Helm, run the configure command with no parameter provided:
-
-```
-cd ~/workspace/solace-kubernetes-quickstart/solace
-../scripts/configure.sh
-```
-
-Now Helm shall be available on your client, e.g: `helm list` shall no longer return an error message.
-
-### Upgrading the cluster
-
-To **upgrade** the version of the message broker running within a Kubernetes cluster:
-
-- Add the new version of the message broker to your container registry.
-- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, e.g.:
-
-```sh
-image:
-  repository: <repo>/<project>/solace-pubsub-standard
-  tag: NEW.VERSION.XXXXX
-  pullPolicy: IfNotPresent
-```
-- Upgrade the Kubernetes release, this will not effect running instances
-
-```sh
-cd ~/workspace/solace-kubernetes-quickstart/solace
-helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
-```
-
-- Delete the pod(s) to force them to be recreated with the new release. 
-
-```sh
-kubectl delete po/XXX-XXX-solace-<pod-ordinal>
-```
-> Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
 ### Modifying the cluster
 
@@ -416,6 +394,33 @@ EOF
 helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 ```
 
+### Upgrading the cluster
+
+To **upgrade** the version of the message broker running within a Kubernetes cluster:
+
+- Add the new version of the message broker to your container registry.
+- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, e.g.:
+
+```sh
+image:
+  repository: <repo>/<project>/solace-pubsub-standard
+  tag: NEW.VERSION.XXXXX
+  pullPolicy: IfNotPresent
+```
+- Upgrade the Kubernetes release, this will not effect running instances
+
+```sh
+cd ~/workspace/solace-kubernetes-quickstart/solace
+helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
+```
+
+- Delete the pod(s) to force them to be recreated with the new release. 
+
+```sh
+kubectl delete po/XXX-XXX-solace-<pod-ordinal>
+```
+> Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
+
 ## Deleting a deployment
 
 Use Helm to delete a deployment, also called a release:
@@ -424,15 +429,20 @@ Use Helm to delete a deployment, also called a release:
 helm delete XXX-XXX
 ```
 
-Check what has remained from the deployment, which should only return a single line with svc/kubernetes:
+Helm will not delete PersistentVolumeClaims and PersistentVolumes - they need to be cleaned up manually if no longer needed.
+
+```
+kubectl get pvc
+# Delete all related pvc
+```
+
+Check what has remained from the deployment, which should only return a single line with svc/kubernetes and other unrelated artifacts if applicable:
 
 ```
 kubectl get statefulsets,services,pods,pvc,pv
 NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP       PORT(S)         AGE
 service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            443/TCP         XX
 ```
-
-> Note: In some versions, Helm may not be able to clean up all the deployment artifacts, e.g.: pvc/ and pv/. If necessary, use `kubectl delete` to delete those.
 
 ## Message Broker Deployment Configurations
 
@@ -444,7 +454,9 @@ The solace mesage broker can be deployed in following scaling:
     * `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12 GB memory
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
-
+    
+<a name="SolaceHelmChartConfig"></a>
+{% include_relative solace/README.md %}
 
 ## Contributing
 
