@@ -417,7 +417,7 @@ The solace mesage broker can be deployed in following scaling:
     
 <a name="SolaceHelmChartConfig"></a>
 {% include_relative solace/README.md %}
-Refer to [SolaceHelmChartConfig](solace/README.md)
+Refer to [SolaceHelmChartConfig](./solace)
 
 ## Contributing
 
