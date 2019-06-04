@@ -96,7 +96,7 @@ cd ~/workspace/solace-pks
 more solace/values.yaml
 ``` 
 
-For a description of all value configuration properties, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
+For all value configuration properties, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 When Helm is used to install a deployment the configuration properties can be set in several ways, in combination of the followings:
 
@@ -245,7 +245,7 @@ The most frequently used service ports including management and messaging are ex
 
 ## Gaining admin access to the message broker
 
-Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The Solace PubSub+ Manager is recommended for manual administration tasks and SEMP API for programmatic configuration.
+Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. Solace PubSub+ Manager is recommended for manual administration tasks and the SEMP API for programmatic configuration.
 
 ### Solace PubSub+ Manager and SEMP API access
 
@@ -253,7 +253,7 @@ Use the Load Balancer's external Public IP at port 8080 to access these services
 
 ### Solace CLI access
 
-If you are using a single message broker and are used to working with a CLI message broker console access, you can SSH into the message broker as the `admin` user using the Load Balancer's external Public IP:
+You can SSH into the active message broker as the `admin` user using the Load Balancer's external Public IP:
 
 ```sh
 
@@ -261,59 +261,43 @@ $ssh -p 22 admin@104.197.193.161
 Solace PubSub+ Standard
 Password:
 
-Solace PubSub+ Standard Version 8.10.0.1057
+Solace PubSub+ Standard Version 9.1.0.117
 
 The Solace PubSub+ Standard is proprietary software of
 Solace Corporation. By accessing the Solace PubSub+ Standard
 you are agreeing to the license terms and conditions located at
 http://www.solace.com/license-software
 
-Copyright 2004-2018 Solace Corporation. All rights reserved.
+Copyright 2004-2019 Solace Corporation. All rights reserved.
 
 To purchase product support, please contact Solace at:
-http://dev.solace.com/contact-us/
+https://solace.com/contact-us/
 
 Operating Mode: Message Routing Node
 
 XXX-XXX-solace-0>
 ```
 
-If you are using an HA cluster, it is better to access the CLI through the Kubernets pod and not directly via SSH.
-
-Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
-
-* Loopback to SSH directly on the pod
+In an HA deployment, for CLI access to individual message broker nodes use:
 
 ```sh
-kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh -p 2222 admin@localhost"
+kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash -c "ssh -p 2222 admin@localhost"
 ```
 
-* Loopback to SSH on your host with a port-forward map
+### Solace nodes SSH access
+
+For SSH access to individual message broker nodes use:
 
 ```sh
-kubectl port-forward XXX-XXX-solace-0 62222:2222 &
-ssh -p 62222 admin@localhost
+kubectl exec -it XXX-XXX-solace-<pod-ordinal> bash
 ```
 
-This can also be mapped to individual message brokers in the cluster via port-forward:
+## Viewing contrainer logs
 
-```
-kubectl port-forward XXX-XXX-solace-0 8081:8080 &
-kubectl port-forward XXX-XXX-solace-1 8082:8080 &
-kubectl port-forward XXX-XXX-solace-2 8083:8080 &
-```
-
-For SSH access to individual message brokers use:
-
-```sh
-kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
-```
-
-## Viewing logs
 Logs from the currently running container:
 
 ```sh
-kubectl logs XXX-XXX-solace-0 -c solace
+kubectl logs XXX-XXX-solace-0 -c solace   # add -f flag to follow real-time
 ```
 
 Logs from the previously terminated container:
@@ -324,13 +308,13 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 ## Testing data access to the message broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
+To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/ ). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
 Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
 ## <a name="SolClusterModifyUpgrade"></a> Modifying/upgrading the message broker cluster
 
-To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+To modify or upgarde the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
 
 ### Modifying the cluster
 
