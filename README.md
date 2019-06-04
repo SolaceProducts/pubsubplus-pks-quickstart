@@ -71,7 +71,7 @@ sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
 # Option b): You can use the public Solace Docker image from Docker Hub
 sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
 
-# Verify image has been loaded, note "IMAGE ID"
+# Verify image has been loaded, note the "IMAGE ID"
 sudo docker images
 ```
 * Login to the private registry
@@ -90,13 +90,13 @@ Note that additional steps may be required if using signed images.
 
 A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates. The generic [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart#step-4 ) provides additional details about the templates used.
 
-For the "solace" Helm chart the values are in the `values.yaml` file located in the `solace` directory:
+For the "solace" Helm chart the default values are in the `values.yaml` file located in the `solace` directory:
 ```sh
 cd ~/workspace/solace-pks
 more solace/values.yaml
 ``` 
 
-For a description of all value configuration properties, refer to section [Solace Helm Chart Configuration]((#SolaceHelmChartConfig)
+For all value configuration properties, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 When Helm is used to install a deployment the configuration properties can be set in several ways, in combination of the followings:
 
@@ -241,17 +241,11 @@ Endpoints:                10.200.9.25:55555
 :
 ```
 
-The most frequently used service ports including management and messaging are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying/upgrading the message broker cluster](#SolClusterModifyUpgrade )
-
-## Available ports
-
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-Refer to //docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm
+The most frequently used service ports including management and messaging are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying/upgrading the message broker cluster](#SolClusterModifyUpgrade ).
 
 ## Gaining admin access to the message broker
 
-Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. The Solace PubSub+ Manager is recommended for manual administration tasks and SEMP API for programmatic configuration.
+Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. Solace PubSub+ Manager is recommended for manual administration tasks and the SEMP API for programmatic configuration.
 
 ### Solace PubSub+ Manager and SEMP API access
 
@@ -259,7 +253,7 @@ Use the Load Balancer's external Public IP at port 8080 to access these services
 
 ### Solace CLI access
 
-If you are using a single message broker and are used to working with a CLI message broker console access, you can SSH into the message broker as the `admin` user using the Load Balancer's external Public IP:
+You can SSH into the active message broker as the `admin` user using the Load Balancer's external Public IP:
 
 ```sh
 
@@ -267,59 +261,43 @@ $ssh -p 22 admin@104.197.193.161
 Solace PubSub+ Standard
 Password:
 
-Solace PubSub+ Standard Version 8.10.0.1057
+Solace PubSub+ Standard Version 9.1.0.117
 
 The Solace PubSub+ Standard is proprietary software of
 Solace Corporation. By accessing the Solace PubSub+ Standard
 you are agreeing to the license terms and conditions located at
 http://www.solace.com/license-software
 
-Copyright 2004-2018 Solace Corporation. All rights reserved.
+Copyright 2004-2019 Solace Corporation. All rights reserved.
 
 To purchase product support, please contact Solace at:
-http://dev.solace.com/contact-us/
+https://solace.com/contact-us/
 
 Operating Mode: Message Routing Node
 
 XXX-XXX-solace-0>
 ```
 
-If you are using an HA cluster, it is better to access the CLI through the Kubernets pod and not directly via SSH.
-
-Note: SSH access to the pod has been configured at port 2222. For external access SSH has been configured to to be exposed at port 22 by the load balancer.
-
-* Loopback to SSH directly on the pod
+In an HA deployment, for CLI access to individual message broker nodes use:
 
 ```sh
-kubectl exec -it XXX-XXX-solace-0  -- bash -c "ssh -p 2222 admin@localhost"
+kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash -c "ssh -p 2222 admin@localhost"
 ```
 
-* Loopback to SSH on your host with a port-forward map
+### Solace nodes SSH access
+
+For SSH access to individual message broker nodes use:
 
 ```sh
-kubectl port-forward XXX-XXX-solace-0 62222:2222 &
-ssh -p 62222 admin@localhost
+kubectl exec -it XXX-XXX-solace-<pod-ordinal> bash
 ```
 
-This can also be mapped to individual message brokers in the cluster via port-forward:
+## Viewing contrainer logs
 
-```
-kubectl port-forward XXX-XXX-solace-0 8081:8080 &
-kubectl port-forward XXX-XXX-solace-1 8082:8080 &
-kubectl port-forward XXX-XXX-solace-2 8083:8080 &
-```
-
-For SSH access to individual message brokers use:
-
-```sh
-kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash
-```
-
-## Viewing logs
 Logs from the currently running container:
 
 ```sh
-kubectl logs XXX-XXX-solace-0 -c solace
+kubectl logs XXX-XXX-solace-0 -c solace   # add -f flag to follow real-time
 ```
 
 Logs from the previously terminated container:
@@ -330,69 +308,35 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 ## Testing data access to the message broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
+To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/ ). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
 Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
 ## <a name="SolClusterModifyUpgrade"></a> Modifying/upgrading the message broker cluster
 
-To upgrade/modify the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+To modify or upgarde the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
 
 ### Modifying the cluster
 
-Similarly, to **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
+To **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
 ```
 cd ~/workspace/solace-kubernetes-quickstart/solace
 tee ./port-update.yaml <<-EOF   # create update file with following contents:
 service:
-  internal: false
-  type: LoadBalancer
-  externalPort:
+  addExternalPort:
     - port: 1883
       protocol: TCP
       name: mqtt
       targetport: 1883
-    - port: 22
-      protocol: TCP
-      name: ssh
-      targetport: 2222
-    - port: 8080
-      protocol: TCP
-      name: semp
-    - port: 55555
-      protocol: TCP
-      name: smf
-    - port: 943
-      protocol: TCP
-      name: semptls
-      targetport: 60943
-    - port: 80
-      protocol: TCP
-      name: web
-      targetport: 60080
-    - port: 443
-      protocol: TCP
-      name: webtls
-      targetport: 60443
-  internalPort:
-    - port: 2222
-      protocol: TCP
-    - port: 8080
-      protocol: TCP
-    - port: 55555
-      protocol: TCP
-    - port: 60943
-      protocol: TCP
-    - port: 60080
-      protocol: TCP
-    - port: 60443
-      protocol: TCP
+  addInternalPort:
     - port: 1883
       protocol: TCP
 EOF
 helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
 ```
+
+For information about ports used refer to the [Solace documentation](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm )
 
 ### Upgrading the cluster
 
@@ -456,7 +400,7 @@ The solace mesage broker can be deployed in following scaling:
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
     
 <a name="SolaceHelmChartConfig"></a>
-{% include_relative solace/README.md %}
+Also refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 ## Contributing
 
