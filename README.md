@@ -116,7 +116,7 @@ When Helm is used to install a deployment the configuration properties can be se
   helm install <chart-location> --set <param1>=<value1>[,<param2>=<value2>]
 ```
 
-Helm will autogenerate a release name if not specified. Here is how to specify a release name:
+Helm will autogenerate a release name if not specified (in this document a Solace "deployment" and Helm "release" are used interchangeably). Here is how to specify a release name:
 ```sh
   # Helm will reference this deployment as "my-solace-ha-release"
   helm install --name my-solace-ha-release <chart-location>
@@ -135,7 +135,7 @@ For a list of of available StorageClasses, execute
 kubectl get storageclass
 ```
 
-It is expected that there is at least one StorageClass available. By default, the "solace" chart assumes the name `standard`, adjust the `storage.useStorageClass` value if necessary.
+It is expected that there is at least one StorageClass available. By default the "solace" chart is configured to use the StorageClass `standard`, adjust the `storage.useStorageClass` value if necessary.
 
 Refer to your PKS environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options.
 
@@ -161,6 +161,7 @@ Then set the `image.pullSecretName` value to `<pull-secret-name>`.
 The default values in the `values.yaml` file in this repo configure a small single-node deployment (`redundancy: false`) with up to 100 connections (`size: prod100`).
 
 ```sh
+# non-HA deployment
 cd ~/workspace/solace-pks/solace
 # Use contents of default values.yaml and override redundancy (if needed) and the admin password
 helm install . --name my-solace-nonha-release \
@@ -174,6 +175,7 @@ watch kubectl get pods --show-labels
 The only difference to the non-HA deployment in the simple case is to set `solace.redundancy=true`.
 
 ```sh
+# HA deployment
 cd ~/workspace/solace-pks/solace
 # Use contents of values.yaml and override redundancy (if needed) and the admin password
 helm install . --name my-solace-ha-release \
@@ -312,15 +314,24 @@ To test data traffic though the newly created message broker instance, visit the
 
 Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
-## <a name="SolClusterModifyUpgrade"></a> Modifying/upgrading the message broker cluster
+## <a name="SolClusterModifyUpgrade"></a> Repairing, Modifying or Upgrading the message broker cluster
 
-To modify or upgarde the message broker cluster, make the required modifications to the chart in the `solace-kubernetes-quickstart/solace` directory as described next, then run the Helm tool from here. When passing multiple `-f <values-file>` to Helm, the override priority will be given to the last (right-most) file specified.
+### Repairing the cluster
+
+`helm upgrade <release-name> <chart-location>` can be used to adjust the deployment to a new set of values.
+
+To repair the deployment by recreating possibly missing artifacts including deleted Service or StateFulSet, execute `helm upgrade` with the same set of values as used for `helm install`. Only the missing templates will be applied.
+
+```sh
+cd ~/workspace/solace-kubernetes-quickstart/solace
+helm upgrade XXXX-XXXX . [--set <settings-for-original-install>] [-f <value-file-for-original-install>]
+```
 
 ### Modifying the cluster
 
-To **modify** other deployment parameters, e.g. to change the ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
+To modify deployment parameters, e.g. to add ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
-```
+```sh
 cd ~/workspace/solace-kubernetes-quickstart/solace
 tee ./port-update.yaml <<-EOF   # create update file with following contents:
 service:
@@ -333,41 +344,32 @@ service:
     - port: 1883
       protocol: TCP
 EOF
-helm upgrade  XXXX-XXXX . --values values.yaml --values port-update.yaml
+helm upgrade XXXX-XXXX . [--set <settings-for-original-install>] [-f <value-file-for-original-install>] -f port-update.yaml
 ```
 
 For information about ports used refer to the [Solace documentation](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm )
 
 ### Upgrading the cluster
 
-To **upgrade** the version of the message broker running within a Kubernetes cluster:
+To upgrade the version of the Solace message broker Docker image running within a Kubernetes cluster:
 
 - Add the new version of the message broker to your container registry.
-- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, e.g.:
+- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, and add it to the deployment, which will upgrade the pod or all pods in an HA deployment.:
 
 ```sh
+cd ~/workspace/solace-kubernetes-quickstart/solace
+tee ./upgrade.yaml <<-EOF   # create update file with following contents:
 image:
   repository: <repo>/<project>/solace-pubsub-standard
   tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
+EOF
+helm upgrade XXXX-XXXX . [--set <settings-for-original-install>] [-f <value-file-for-original-install>] -f upgrade.yaml
 ```
-- Upgrade the Kubernetes release, this will not effect running instances
-
-```sh
-cd ~/workspace/solace-kubernetes-quickstart/solace
-helm upgrade XXX-XXX . -f values.yaml -f upgrade.yaml
-```
-
-- Delete the pod(s) to force them to be recreated with the new release. 
-
-```sh
-kubectl delete po/XXX-XXX-solace-<pod-ordinal>
-```
-> Important: In an HA deployment, delete the pods in this order: 2,1,0 (i.e. Monitoring Node, Backup Messaging Node, Primary Messaging Node). Confirm that the message broker redundancy is up and reconciled before deleting each pod - this can be verified using the CLI `show redundancy` and `show config-sync` commands on the message broker, or by grepping the message broker container logs for `config-sync-check`.
 
 ## Deleting a deployment
 
-Use Helm to delete a deployment, also called a release:
+Use Helm to delete a release:
 
 ```
 helm delete XXX-XXX
@@ -377,10 +379,10 @@ Helm will not delete PersistentVolumeClaims and PersistentVolumes - they need to
 
 ```
 kubectl get pvc
-# Delete all related pvc
+# Delete all related pvc, which will clean up their used pv
 ```
 
-Check what has remained from the deployment, which should only return a single line with svc/kubernetes and other unrelated artifacts if applicable:
+Check what has remained from the deployment, which should only return a single line with svc/kubernetes and artifacts from other deployments, if applicable:
 
 ```
 kubectl get statefulsets,services,pods,pvc,pv
@@ -399,8 +401,7 @@ The solace mesage broker can be deployed in following scaling:
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
     
-<a name="SolaceHelmChartConfig"></a>
-Also refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
+For the chart configuration values, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 ## Contributing
 
