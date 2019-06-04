@@ -51,7 +51,7 @@ cd solace-pks    # repo root directory
 
 ### Step 3 (Optional): Load the Solace Docker image to a private Docker image registry
 
-**Hint:** You may skip the rest of this step if not using a private Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ). For public Docker Hub the docker registry reference to use will be `solace/solace-pubsub-standard:<TagName>`.
+**Hint:** You may skip the rest of this step if not using a private Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
 
 To get the Solace message broker Docker image, go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **docker** image or obtain your version from Solace Support.
 
@@ -60,37 +60,42 @@ To get the Solace message broker Docker image, go to the Solace Developer Portal
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-To load the Docker image tar archive file into a docker registry, follow the steps specific to the registry you are using.
+To load the Solace Docker image into a docker registry, follow the general steps below; for specifics, consult the user guide of the registry you are using.
 
-This is a general example:
-* Local installation of [`docker`](//docs.docker.com/get-started/ ) is required
+* Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
 * First load the image to the local docker registry:
-```
+```sh
 # Option a): If you have a tar.gz Docker image file
 sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
 # Option b): You can use the public Solace Docker image from Docker Hub
 sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
 
-# Verify image has been loaded, note the "IMAGE ID"
+# Verify the image has been loaded and note the associated "IMAGE ID"
 sudo docker images
 ```
-* Login to the private registry
-`sudo docker login <private-registry> ...`
-* Tag the image with the desired name and tag
-`sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>`
+* Login to the private registry:
+```sh
+sudo docker login <private-registry> ...
+```
+* Tag the image with the desired name and tag:
+```sh
+sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>
+```
 * Push the image to the private registry
-`sudo docker push <private-registry>/<path>/<image-name>:<tag>`
+```sh
+sudo docker push <private-registry>/<path>/<image-name>:<tag>
+```
 
 Note that additional steps may be required if using signed images.
 
 
-### Step 4: Deploy message broker Pods and Service to the cluster
+### Step 4: Deploy the message broker
 
 #### Overview
 
-A deployment is defined by a "Helm chart", which consists of templates and values. The values specify the particular configuration properties in the templates. The generic [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart#step-4 ) provides additional details about the templates used.
+A deployment is defined by a "Helm chart", which consists of templates and values. The *values* specify the particular configuration properties in the templates. The generic [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart#step-4 ) provides additional details about the templates used.
 
-For the "solace" Helm chart the default values are in the `values.yaml` file located in the `solace` directory:
+For the "solace" Helm chart the default *values* are in the `values.yaml` file located in the `solace` directory:
 ```sh
 cd ~/workspace/solace-pks
 more solace/values.yaml
@@ -98,37 +103,38 @@ more solace/values.yaml
 
 For all value configuration properties, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
-When Helm is used to install a deployment the configuration properties can be set in several ways, in combination of the followings:
+When Helm is used to install a deployment, the configuration properties can be set in several ways, in combination of the followings:
 
-* By default, if no other values-file or override is specified, settings from the `values.yaml` in the chart directory is used.
+* If no other values-file or override is specified, settings from the local `values.yaml` in the chart directory is used.
 ```sh
   # <chart-location>: directory path, url or Helm repo reference to the chart
   helm install <chart-location>
 ```
-* The default `values.yaml` can be overlayed by one or more specified values-files; each additional file overrides settings in the previous one. A values file may define only a subset of values.
+* The default `values.yaml` can be overlayed by one or more specified values-files; each additional file overrides settings in the previous one. A values file may also define only a subset of values.
 ```sh
   # <my-values-file>: directory path to a values file
   helm install -f <my-values-file1>[ -f <my-values-file2>] <chart-location>
 ```
-* Explicitly overriding settings
+* Explicitly overriding configuration properties:
 ```sh
-  # overrides the setting in values.yaml in the chart directory, can pass multiple
+  # overrides the settings in values.yaml in the chart directory, can pass multiple params
   helm install <chart-location> --set <param1>=<value1>[,<param2>=<value2>]
 ```
 
-Helm will autogenerate a release name if not specified (in this document a Solace "deployment" and Helm "release" are used interchangeably). Here is how to specify a release name:
+Helm will autogenerate a release name if not specified (in this document a Solace "deployment" and a Helm "release" are used interchangeably). Here is how to specify a release name:
 ```sh
   # Helm will reference this deployment as "my-solace-ha-release"
   helm install --name my-solace-ha-release <chart-location>
 ```
 
-Check for dependencies before going ahead with a deployment: the Solace deployment may depend on the presence of Kubernetes objects, such as a StorageClass and ImagePullSecrets. These need to be created first if required.
+<br/>
+Now check for dependencies before going ahead with a deployment: the Solace deployment may depend on the presence of Kubernetes objects, such as a StorageClass and ImagePullSecrets. These need to be created first if required.
 
 #### Ensure a StorageClass is available
 
-The Solace deployment uses disk storage for logging, configuration, guaranteed messaging and other purposes. The use of a persistent storage is recommended, otherwise data will be lost with the loss of a pod.
+The Solace deployment uses disk storage for logging, configuration, guaranteed messaging and other purposes. The use of a persistent storage is recommended, otherwise if a pod-local storage is used data will be lost with the loss of a pod.
 
-A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/ ) is used to obtain persistent storage from outside the pod.
+A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/ ) is used to obtain a persistent storage that is external to the pod.
 
 For a list of of available StorageClasses, execute
 ```sh
@@ -144,7 +150,7 @@ Refer to your PKS environment's documentation if a StorageClass needs to be crea
 
 ImagePullSecrets may be required if using signed images from a private Docker registry, including Harbor.
 
-Here is an example of creating a secret. Refer to your registry's documentation for the specific details of use.
+Here is an example of creating an ImagePullSecret. Refer to your registry's documentation for the specific details of use.
 
 ```sh
 kubectl create secret docker-registry <pull-secret-name> --dockerserver=<private-registry-server> \
@@ -184,11 +190,11 @@ helm install . --name my-solace-ha-release \
 watch kubectl get pods --show-labels
 ```
 
-To modify a deployment, refer to section [Upgrading/modifying the message broker cluster](#SolClusterModifyUpgrade ). If you need to start over then refer to section [Deleting a deployment](#deleting-a-deployment).
+To modify a deployment, refer to section [Repairing, Modifying or Upgrading the message broker cluster](#SolClusterModifyUpgrade ). If you need to start over then refer to section [Deleting a deployment](#deleting-a-deployment).
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA cluster is deployed with po/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-solace-ha-release".
+Now you can validate your deployment on the command line. In this example an HA cluster is deployed with pod/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-solace-ha-release".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -243,11 +249,11 @@ Endpoints:                10.200.9.25:55555
 :
 ```
 
-The most frequently used service ports including management and messaging are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying/upgrading the message broker cluster](#SolClusterModifyUpgrade ).
+The most frequently used management and messaging service ports are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying the Cluster](#SolClusterModify ).
 
 ## Gaining admin access to the message broker
 
-Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available tools. Solace PubSub+ Manager is recommended for manual administration tasks and the SEMP API for programmatic configuration.
+Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available admin tools. "Solace PubSub+ Manager" is recommended for manual administration tasks and the "SEMP API" for programmatic configuration.
 
 ### Solace PubSub+ Manager and SEMP API access
 
@@ -280,7 +286,7 @@ Operating Mode: Message Routing Node
 XXX-XXX-solace-0>
 ```
 
-In an HA deployment, for CLI access to individual message broker nodes use:
+In an HA deployment, for CLI access to the individual message broker nodes use:
 
 ```sh
 kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash -c "ssh -p 2222 admin@localhost"
@@ -316,18 +322,20 @@ Use the external Public IP to access the cluster. If a port required for a proto
 
 ## <a name="SolClusterModifyUpgrade"></a> Repairing, Modifying or Upgrading the message broker cluster
 
-### Repairing the cluster
-
 `helm upgrade <release-name> <chart-location>` can be used to adjust the deployment to a new set of values.
 
-To repair the deployment by recreating possibly missing artifacts including deleted Service or StateFulSet, execute `helm upgrade` with the same set of values as used for `helm install`. Only the missing templates will be applied.
+### Repairing the Cluster
+
+To repair the deployment by recreating possibly missing artifacts including a deleted Service or StateFulSet, execute `helm upgrade` with the same set of values as used for `helm install`. Only the missing templates will be applied.
 
 ```sh
 cd ~/workspace/solace-kubernetes-quickstart/solace
-helm upgrade XXXX-XXXX . [--set <settings-for-original-install>] [-f <value-file-for-original-install>]
+helm upgrade XXXX-XXXX . \
+           [--set <settings-for-original-install>] \
+           [-f <value-file-for-original-install>]
 ```
 
-### Modifying the cluster
+### <a name="SolClusterModify"></a> Modifying the Cluster
 
 To modify deployment parameters, e.g. to add ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
@@ -344,12 +352,15 @@ service:
     - port: 1883
       protocol: TCP
 EOF
-helm upgrade XXXX-XXXX . [--set <settings-for-original-install>] [-f <value-file-for-original-install>] -f port-update.yaml
+helm upgrade XXXX-XXXX . \
+           [--set <settings-for-original-install>] \
+           [-f <value-file-for-original-install>] \
+           -f port-update.yaml
 ```
 
 For information about ports used refer to the [Solace documentation](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm )
 
-### Upgrading the cluster
+### Upgrading the Cluster
 
 To upgrade the version of the Solace message broker Docker image running within a Kubernetes cluster:
 
@@ -364,7 +375,10 @@ image:
   tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
 EOF
-helm upgrade XXXX-XXXX . [--set <settings-for-original-install>] [-f <value-file-for-original-install>] -f upgrade.yaml
+helm upgrade XXXX-XXXX . \
+           [--set <settings-for-original-install>] \
+           [-f <value-file-for-original-install>] \
+           -f upgrade.yaml
 ```
 
 ## Deleting a deployment
@@ -401,7 +415,7 @@ The solace mesage broker can be deployed in following scaling:
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
     
-For the chart configuration values, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
+For the "solace" chart configuration values, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 ## Contributing
 
