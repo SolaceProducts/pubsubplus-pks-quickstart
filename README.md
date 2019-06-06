@@ -162,15 +162,38 @@ Then set the `image.pullSecretName` value to `<pull-secret-name>`.
 
 #### Use Helm to install the deployment
 
+There are two options to use the "solace" Helm chart:
+
+a) From a local clone of this GitHub project; or
+b) From a Helm Chart Repository.
+
+The following examples use option a), a local clone.
+
+If using a Helm Chart Repository, such as Harbor, first package the solace Helm chart and load it in your Helm Chart Repository. 
+
+```sh
+cd ~/workspace/solace-pks
+# Create a package
+helm package solace
+
+# Refer to your Repository's documentation how to load the chart
+:
+``` 
+Then replace `solace` in the following examples with the path of the "solace" chart in your Repository:
+```
+# No need to cd ~/workspace/solace-pks, can be executed from anywhere
+helm install solace ... ===> helm install <repo>/<path-of-the-solace-chart> ...
+```
+
 ##### Single-node non-HA deployment
 
 The default values in the `values.yaml` file in this repo configure a small single-node deployment (`redundancy: false`) with up to 100 connections (`size: prod100`).
 
 ```sh
 # non-HA deployment
-cd ~/workspace/solace-pks/solace
+cd ~/workspace/solace-pks
 # Use contents of default values.yaml and override redundancy (if needed) and the admin password
-helm install . --name my-solace-nonha-release \
+helm install solace --name my-solace-nonha-release \
                --set solace.redundancy=false,solace.usernameAdminPassword=Ch@ngeMe
 # Wait until the pod is running and ready and the active message broker pod label is "active=true"
 watch kubectl get pods --show-labels
@@ -182,9 +205,9 @@ The only difference to the non-HA deployment in the simple case is to set `solac
 
 ```sh
 # HA deployment
-cd ~/workspace/solace-pks/solace
+cd ~/workspace/solace-pks
 # Use contents of values.yaml and override redundancy (if needed) and the admin password
-helm install . --name my-solace-ha-release \
+helm install solace --name my-solace-ha-release \
                --set solace.redundancy=true,solace.usernameAdminPassword=Ch@ngeMe
 # Wait until all pods running and ready and the active message broker pod label is "active=true"
 watch kubectl get pods --show-labels
