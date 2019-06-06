@@ -353,8 +353,8 @@ Use the external Public IP to access the cluster. If a port required for a proto
 To repair the deployment by recreating possibly missing artifacts including a deleted Service or StateFulSet, execute `helm upgrade` with the same set of values as used for `helm install`. Only the missing templates will be applied.
 
 ```sh
-cd ~/workspace/solace-kubernetes-quickstart/solace
-helm upgrade XXXX-XXXX . \
+cd ~/workspace/solace-pks
+helm upgrade XXXX-XXXX solace \
            [--set <settings-for-original-install>] \
            [-f <value-file-for-original-install>]
 ```
@@ -364,7 +364,7 @@ helm upgrade XXXX-XXXX . \
 To modify deployment parameters, e.g. to add ports exposed via the loadbalancer, you need to upgrade the release with a new set of ports. In this example we will add the MQTT 1883 tcp port to the loadbalancer.
 
 ```sh
-cd ~/workspace/solace-kubernetes-quickstart/solace
+cd ~/workspace/solace-pks
 tee ./port-update.yaml <<-EOF   # create update file with following contents:
 service:
   addExternalPort:
@@ -376,30 +376,32 @@ service:
     - port: 1883
       protocol: TCP
 EOF
-helm upgrade XXXX-XXXX . \
+helm upgrade XXXX-XXXX solace \
            [--set <settings-for-original-install>] \
            [-f <value-file-for-original-install>] \
            -f port-update.yaml
 ```
 
-For information about ports used refer to the [Solace documentation](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm )
+For information about ports used, refer to the [Solace documentation](//docs.solace.com/Configuring-and-Managing/Default-Port-Numbers.htm ).
+
+Note: the cluster cannot be modified this way between non-HA and HA deployments, as well as scaling tiers.
 
 ### Upgrading the Cluster
 
 To upgrade the version of the Solace message broker Docker image running within a Kubernetes cluster:
 
 - Add the new version of the message broker to your container registry.
-- Create a simple upgrade.yaml file in solace-kubernetes-quickstart/solace directory, and add it to the deployment, which will upgrade the pod or all pods in an HA deployment.:
+- Create a simple upgrade.yaml file directory, and add it to the deployment, which will upgrade the pod or all pods in an HA deployment.:
 
 ```sh
-cd ~/workspace/solace-kubernetes-quickstart/solace
+cd ~/workspace/solace-pks
 tee ./upgrade.yaml <<-EOF   # create update file with following contents:
 image:
   repository: <repo>/<project>/solace-pubsub-standard
   tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
 EOF
-helm upgrade XXXX-XXXX . \
+helm upgrade XXXX-XXXX solace \
            [--set <settings-for-original-install>] \
            [-f <value-file-for-original-install>] \
            -f upgrade.yaml
@@ -449,7 +451,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Authors
 
-See the list of [contributors](//github.com/SolaceProducts/solace-kubernetes-quickstart/graphs/contributors) who participated in this project.
+See the list of [contributors](//github.com/SolaceProducts/solace-pks/graphs/contributors) who participated in this project.
 
 ## License
 
