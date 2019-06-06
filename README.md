@@ -316,7 +316,7 @@ kubectl logs XXX-XXX-solace-0 -c solace -p
 
 ## Testing data access to the message broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [send and receive messages](http://dev.solace.com/get-started/send-receive-messages/ ). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
+To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [APIs & Protocols](https://docs.solace.com/APIs.htm ). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
 Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
@@ -406,7 +406,7 @@ service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            
 
 ## Message Broker Deployment Configurations
 
-The solace mesage broker can be deployed in following scaling:
+The solace mesage broker can be deployed in following scaling (simultaneous connections):
 
     * `dev`: for development purposes, no guaranteed performance. Minimum requirements: 1 CPU, 1 GB memory
     * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
@@ -415,6 +415,8 @@ The solace mesage broker can be deployed in following scaling:
     * `prod100k`: up to 100,000 connections, minimum requirements: 8 CPU, 28 GB memory
     * `prod200k`: up to 200,000 connections, minimum requirements: 12 CPU, 56 GB memory
     
+Note: the free PubSub+ Standard Edition supports up to `prod1k`.
+
 For the "solace" chart configuration values, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
 
 ## Contributing
