@@ -165,11 +165,12 @@ Then set the `image.pullSecretName` value to `<pull-secret-name>`.
 There are two options to use the "solace" Helm chart:
 
 a) From a local clone of this GitHub project; or
+<br/>
 b) From a Helm Chart Repository.
 
-The following examples use option a), a local clone.
+The following non-HA and HA deployment examples use option a), a local clone.
 
-If using a Helm Chart Repository, such as Harbor, first package the solace Helm chart and load it in your Helm Chart Repository. 
+If using a Helm Chart Repository, such as Harbor, first package the "solace" Helm chart and load it into your Helm Chart Repository. 
 
 ```sh
 cd ~/workspace/solace-pks
