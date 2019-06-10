@@ -60,9 +60,9 @@ To get the Solace message broker Docker image URL, go to the Solace Developer Po
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-If using Harbor for private Docker registry, use the `upload_harbor.sh` script provided in the script directory. You can pass the Solace image reference as a public Docker image location or a Http download Url (the Solace image `md5` checksum must also be available from the Http download Url). Also provide the Harbor host and project names and additionally, if using signed images set the `DOCKER_CONTENT_TRUST=1` and `DOCKER_CONTENT_TRUST_SERVER` environment variables. Check the script inline comments for defaults.
+If using Harbor for private Docker registry, use the `upload_harbor.sh` script provided in the `scripts` directory. You can pass the Solace image reference as a public Docker image location or a Http download Url (the Solace image `md5` checksum must also be available from the Http download Url). Also provide the Harbor host and project names and additionally, if using signed images set the `DOCKER_CONTENT_TRUST=1` and `DOCKER_CONTENT_TRUST_SERVER` environment variables. Check the script inline comments for defaults.
 
-Note: ensure the project with a user configured exists in Harbor, Docker is logged in to the Harbor server as user, as well as Docker Notary is configured for Harbor. Consult your Harbor documentation for details. 
+Note: Ensure the project with a user configured exists in Harbor, Docker is logged in to the Harbor server as user, as well as Docker Notary is configured for Harbor if using signed images. Consult your Harbor documentation for details. 
 
 ```sh
 cd ~/workspace/solace-pks/scripts
@@ -74,10 +74,10 @@ cd ~/workspace/solace-pks/scripts
   [DOCKER_CONTENT_TRUST_SERVER=<full-server-url-with-port>] \
   upload_harbor.sh
 ## Example-1: upload the latest from Docker Hub to Harbor
-# HARBOR_HOST=<harbor-server> ./upload_harbor.sh
+HARBOR_HOST=<harbor-server> ./upload_harbor.sh
 ## Example-2: upload from a Http Url to Harbor
-# HARBOR_HOST=<harbor-server> \
-# SOLACE_IMAGE_URL=https://<server-location>/solace-pubsub-standard-9.1.0.118-docker.tar.gz ./upload_harbor.sh
+HARBOR_HOST=<harbor-server> \
+SOLACE_IMAGE_URL=https://<server-location>/solace-pubsub-standard-9.1.0.118-docker.tar.gz ./upload_harbor.sh
 ```
 
 To load the Solace Docker image into other private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
