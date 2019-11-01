@@ -1,5 +1,5 @@
-# Create the StatefullSet, (petset), needed for redundancy
-apiVersion: apps/v1beta1
+# Create the StatefulSet needed for redundancy
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: {{ template "solace.fullname" . }}
@@ -9,6 +9,10 @@ metadata:
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 spec:
+  selector:
+    matchLabels:
+      app: {{ template "solace.name" . }}
+      release: {{ .Release.Name }}
   serviceName: {{ template "solace.fullname" . }}-discovery
   replicas: {{- if .Values.solace.redundancy }} 3 {{- else }} 1 {{- end }}
   podManagementPolicy: Parallel
@@ -80,7 +84,6 @@ spec:
           exec:
             command:
             - /mnt/disks/solace/readiness_check.sh
-            - "7"
         securityContext:
           privileged: false
           capabilities:
@@ -113,9 +116,9 @@ spec:
           readOnly: true
         - name: dshm
           mountPath: /dev/shm
-        #- name: data
-        #  mountPath: /usr/sw/jail
-        #  subPath: jail
+        - name: data
+          mountPath: /usr/sw/jail
+          subPath: jail
         - name: data
           mountPath: /usr/sw/var
           subPath: var
@@ -125,12 +128,15 @@ spec:
         - name: data
           mountPath: /usr/sw/adb
           subPath: adb
-        #- name: data
-        #  mountPath: /var/lib/solace/diags
-        #  subPath: diags
+        - name: data
+          mountPath: /var/lib/solace/diags
+          subPath: diags
+{{- if not .Values.storage.nfs }}
+        # only mount when not using nfs
         - name: data
           mountPath: /usr/sw/internalSpool/softAdb
           subPath: softAdb
+{{- end }} #end !nfs
         ports:
         - containerPort: 2222
           protocol: TCP
@@ -168,19 +174,19 @@ spec:
   {{- if not .Values.storage.persistent }}
         - name: data
           emptyDir: {}
-  {{- else }}
+  {{- else }} #end !persistent
   volumeClaimTemplates:
   - metadata:
       name: data
     spec:
-    {{- if .Values.storage.useStorageClass }}
+  {{- if .Values.storage.useStorageClass }}
       storageClassName: {{ .Values.storage.useStorageClass }}
-    {{- else }}
-      storageClassName: standard
-    {{- end}}
+  {{- else if .Values.storage.type }}
+      storageClassName: {{ .Release.Name }}-{{ .Values.storage.type }}
+  {{- end}}
       accessModes: [ "ReadWriteOnce" ]
       resources:
         requests:
           storage: {{ .Values.storage.size}}
   {{- end }}
-{{- end}}
+{{- end}} #end storage

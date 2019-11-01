@@ -1,22 +1,22 @@
-# Install a Solace PubSub+ Software Message Broker onto a Pivotal Container Service (PKS) cluster
+# Install a Solace PubSub+ Software Event Broker onto a Pivotal Container Service (PKS) cluster
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Message Broker in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
+This repository explains how to install a Solace PubSub+ Software Event Broker in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
 
-The recommended Solace PubSub+ Software Message Broker version is 9.1 or later.
+The recommended Solace PubSub+ Software Event Broker version is 9.3 or later.
 
-For deploying Solace PubSub+ Software Message Broker in a generic Kubernetes environment, refer to the [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart ).
+For deploying Solace PubSub+ Software Event Broker in a generic Kubernetes environment, refer to the [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart ).
 
-## Description of the Solace PubSub+ Software Message Broker
+## Description of the Solace PubSub+ Software Event Broker
 
-The Solace PubSub+ software message broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The message broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
+The Solace PubSub+ software event broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The event broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
 
-Solace PubSub+ software message brokers can be deployed in either a 3-node High-Availability (HA) cluster, or as a single-node non-HA deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
+Solace PubSub+ software event brokers can be deployed in either a 3-node High-Availability (HA) cluster, or as a single-node non-HA deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
 
-## How to deploy a message broker onto PKS
+## How to deploy an event broker onto PKS
 
-In this quick start we go through the steps to set up a message broker either as a single-node instance (default settings), or in a 3-node HA cluster.
+In this quick start we go through the steps to set up an event broker either as a single-node instance (default settings), or in a 3-node HA cluster.
 
 ### Step 1: Access to PKS
 
@@ -27,7 +27,7 @@ Tasks may include:
 * Getting access to a platform which supports PKS, such as VMware Enterprise PKS
 * Install Kubernetes [`kubectl`](//kubernetes.io/docs/tasks/tools/install-kubectl/ ) tool.
 * Install the PKS CLI client and log in.
-* Create a PKS cluster (for CPU and memory requirements of your Solace message broker target deployment configuration, refer to the [Deployment Configurations](#message-broker-deployment-configurations) section)
+* Create a PKS cluster (for CPU and memory requirements of your Solace event broker target deployment configuration, refer to the [Deployment Configurations](#event-broker-deployment-configurations) section)
 * Configure any necessary environment settings and install certificates
 * Fetch the credentials for the PKS cluster
 * Perform any necessary setup and configure access if using a private Docker image registry, such as Harbor
@@ -53,7 +53,7 @@ cd solace-pks    # repo root directory
 
 **Hint:** You may skip the rest of this step if not using a private Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
 
-To get the Solace message broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software message broker as a **docker** image or obtain your version from Solace Support.
+To get the Solace event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
 
 | PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
 | :---: | :---: |
@@ -109,7 +109,7 @@ sudo docker push <private-registry>/<path>/<image-name>:<tag>
 Note that additional steps may be required if using signed images.
 
 
-### Step 4: Deploy the message broker
+### Step 4: Deploy the event broker
 
 #### Overview
 
@@ -216,7 +216,7 @@ cd ~/workspace/solace-pks
 # Use contents of default values.yaml and override redundancy (if needed) and the admin password
 helm install solace --name my-solace-nonha-release \
                --set solace.redundancy=false,solace.usernameAdminPassword=Ch@ngeMe
-# Wait until the pod is running and ready and the active message broker pod label is "active=true"
+# Wait until the pod is running and ready and the active event broker pod label is "active=true"
 watch kubectl get pods --show-labels
 ```
 
@@ -230,15 +230,15 @@ cd ~/workspace/solace-pks
 # Use contents of values.yaml and override redundancy (if needed) and the admin password
 helm install solace --name my-solace-ha-release \
                --set solace.redundancy=true,solace.usernameAdminPassword=Ch@ngeMe
-# Wait until all pods running and ready and the active message broker pod label is "active=true"
+# Wait until all pods running and ready and the active event broker pod label is "active=true"
 watch kubectl get pods --show-labels
 ```
 
-To modify a deployment, refer to section [Repairing, Modifying or Upgrading the message broker cluster](#SolClusterModifyUpgrade ). If you need to start over then refer to section [Deleting a deployment](#deleting-a-deployment).
+To modify a deployment, refer to section [Repairing, Modifying or Upgrading the event broker cluster](#SolClusterModifyUpgrade ). If you need to start over then refer to section [Deleting a deployment](#deleting-a-deployment).
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA cluster is deployed with pod/XXX-XXX-solace-0 being the active message broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-solace-ha-release".
+Now you can validate your deployment on the command line. In this example an HA cluster is deployed with pod/XXX-XXX-solace-0 being the active event broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-solace-ha-release".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
@@ -295,7 +295,7 @@ Endpoints:                10.200.9.25:55555
 
 The most frequently used management and messaging service ports are exposed through a Load Balancer. In the above example `104.197.193.161` is the Load Balancer's external Public IP to use. If you need to expose additional ports refer to section [Modifying the Cluster](#SolClusterModify ).
 
-## Gaining admin access to the message broker
+## Gaining admin access to the event broker
 
 Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm ) of the online documentation to learn more about the available admin tools. "Solace PubSub+ Manager" is recommended for manual administration tasks and the "SEMP API" for programmatic configuration.
 
@@ -305,7 +305,7 @@ Use the Load Balancer's external Public IP at port 8080 to access these services
 
 ### Solace CLI access
 
-You can SSH into the active message broker as the `admin` user using the Load Balancer's external Public IP:
+You can SSH into the active event broker as the `admin` user using the Load Balancer's external Public IP:
 
 ```sh
 
@@ -330,7 +330,7 @@ Operating Mode: Message Routing Node
 XXX-XXX-solace-0>
 ```
 
-In an HA deployment, for CLI access to the individual message broker nodes use:
+In an HA deployment, for CLI access to the individual event broker nodes use:
 
 ```sh
 kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash -c "ssh -p 2222 admin@localhost"
@@ -338,7 +338,7 @@ kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash -c "ssh -p 2222 admin@loca
 
 ### Solace nodes SSH access
 
-For SSH access to individual message broker nodes use:
+For SSH access to individual event broker nodes use:
 
 ```sh
 kubectl exec -it XXX-XXX-solace-<pod-ordinal> bash
@@ -358,13 +358,13 @@ Logs from the previously terminated container:
 kubectl logs XXX-XXX-solace-0 -c solace -p
 ```
 
-## Testing data access to the message broker
+## Testing data access to the event broker
 
-To test data traffic though the newly created message broker instance, visit the Solace Developer Portal and and select your preferred programming language in [APIs & Protocols](https://docs.solace.com/APIs.htm ). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
+To test data traffic though the newly created event broker instance, visit the Solace Developer Portal and and select your preferred programming language in [APIs & Protocols](https://docs.solace.com/APIs.htm ). Under each language there is a Publish/Subscribe tutorial that will help you get started and provide the specific default port to use.
 
 Use the external Public IP to access the cluster. If a port required for a protocol is not opened, refer to the next section on how to open it up by modifying the cluster.
 
-## <a name="SolClusterModifyUpgrade"></a> Repairing, Modifying or Upgrading the message broker cluster
+## <a name="SolClusterModifyUpgrade"></a> Repairing, Modifying or Upgrading the event broker cluster
 
 `helm upgrade <release-name> <chart-location>` can be used to adjust the deployment to a new set of values.
 
@@ -408,9 +408,9 @@ Note: the cluster cannot be modified this way between non-HA and HA deployments,
 
 ### Upgrading the Cluster
 
-To upgrade the version of the Solace message broker Docker image running within a Kubernetes cluster:
+To upgrade the version of the Solace event broker Docker image running within a Kubernetes cluster:
 
-- Add the new version of the message broker to your container registry.
+- Add the new version of the event broker to your container registry.
 - Create a simple upgrade.yaml file directory, and add it to the deployment, which will upgrade the pod or all pods in an HA deployment.:
 
 ```sh
@@ -450,11 +450,11 @@ NAME                           TYPE           CLUSTER-IP      EXTERNAL-IP       
 service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            443/TCP         XX
 ```
 
-## Message Broker Deployment Configurations
+## Event Broker Deployment Configurations
 
-The solace mesage broker can be deployed in following scaling (simultaneous connections):
+The solace event broker can be deployed in following scaling (simultaneous connections):
 
-    * `dev`: for development purposes, no guaranteed performance. Minimum requirements: 1 CPU, 1 GB memory
+    * `dev`: for development purposes only, no guaranteed performance. Minimum requirements: 1 CPU, 1 GB memory
     * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
     * `prod1k`: up to 1,000 connections, minimum requirements: 2 CPU, 4 GB memory
     * `prod10k`: up to 10,000 connections, minimum requirements: 4 CPU, 12 GB memory
