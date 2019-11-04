@@ -49,25 +49,25 @@ cd solace-pks    # repo root directory
 ./scripts/setup_helm.sh
 ```
 
-### Step 3 (Optional): Load the Solace Docker image to a private Docker image registry
+### Step 3 (Optional): Load the PubSub+ Docker image to a private Docker image registry
 
 **Hint:** You may skip the rest of this step if not using a private Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
 
-To get the Solace event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
+To get the PubSub+ event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
 
 | PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
 | :---: | :---: |
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-If using Harbor for private Docker registry, use the `upload_harbor.sh` script provided in the `scripts` directory. You can pass the Solace image reference as a public Docker image location or a Http download Url (the Solace image `md5` checksum must also be available from the Http download Url). Also provide the Harbor host and project names and additionally, if using signed images set the `DOCKER_CONTENT_TRUST=1` and `DOCKER_CONTENT_TRUST_SERVER` environment variables. Check the script inline comments for defaults.
+If using Harbor for private Docker registry, use the `upload_harbor.sh` script provided in the `scripts` directory. You can pass the PubSub+ image reference as a public Docker image location or a Http download Url (the PubSub+ image `md5` checksum must also be available from the Http download Url). Also provide the Harbor host and project names and additionally, if using signed images set the `DOCKER_CONTENT_TRUST=1` and `DOCKER_CONTENT_TRUST_SERVER` environment variables. Check the script inline comments for defaults.
 
 Note: Ensure the project with a user configured exists in Harbor, Docker is logged in to the Harbor server as user, as well as Docker Notary is configured for Harbor if using signed images. Consult your Harbor documentation for details. 
 
 ```sh
 cd ~/workspace/solace-pks/scripts
 # Define variables up-front to be passed to the "upload_harbor" script:
-[SOLACE_IMAGE_URL=<docker-repo-or-download-link>] \
+[PUBSUBPLUS_IMAGE_URL=<docker-repo-or-download-link>] \
   HARBOR_HOST=<hostname> \
   [HARBOR_PROJECT=<project>] \
   [DOCKER_CONTENT_TRUST=[0|1] \
@@ -77,17 +77,17 @@ cd ~/workspace/solace-pks/scripts
 HARBOR_HOST=<harbor-server> ./upload_harbor.sh
 ## Example-2: upload from a Http Url to Harbor
 HARBOR_HOST=<harbor-server> \
-SOLACE_IMAGE_URL=https://<server-location>/solace-pubsub-standard-9.1.0.118-docker.tar.gz ./upload_harbor.sh
+PUBSUBPLUS_IMAGE_URL=https://<server-location>/solace-pubsub-standard-9.1.0.118-docker.tar.gz ./upload_harbor.sh
 ```
 
-To load the Solace Docker image into other private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
+To load the PubSub+ Docker image into other private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
 
 * Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
 * First load the image to the local docker registry:
 ```sh
 # Option a): If you have a local tar.gz Docker image file
 sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
-# Option b): You can use the public Solace Docker image from Docker Hub
+# Option b): You can use the public PubSub+ Docker image from Docker Hub
 sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
 
 # Verify the image has been loaded and note the associated "IMAGE ID"
@@ -115,13 +115,13 @@ Note that additional steps may be required if using signed images.
 
 A deployment is defined by a "Helm chart", which consists of templates and values. The *values* specify the particular configuration properties in the templates. The generic [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart#step-4 ) provides additional details about the templates used.
 
-For the "solace" Helm chart the default *values* are in the `values.yaml` file located in the `solace` directory:
+For the "pubsubplus" Helm chart the default *values* are in the `values.yaml` file located in the `pubsubplus` directory:
 ```sh
 cd ~/workspace/solace-pks
-more solace/values.yaml
+more pubsubplus/values.yaml
 ``` 
 
-For all value configuration properties, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
+For all value configuration properties, refer to the documentation of the [Helm Chart Configuration](pubsubplus#helm-chart-configuration)
 
 When Helm is used to install a deployment, the configuration properties can be set in several ways, in combination of the followings:
 
@@ -141,18 +141,18 @@ When Helm is used to install a deployment, the configuration properties can be s
   helm install <chart-location> --set <param1>=<value1>[,<param2>=<value2>]
 ```
 
-Helm will autogenerate a release name if not specified (in this document a Solace "deployment" and a Helm "release" are used interchangeably). Here is how to specify a release name:
+Helm will autogenerate a release name if not specified (in this document a PubSub+ "deployment" and a Helm "release" are used interchangeably). Here is how to specify a release name:
 ```sh
-  # Helm will reference this deployment as "my-solace-ha-release"
-  helm install --name my-solace-ha-release <chart-location>
+  # Helm will reference this deployment as "my-pubsubplus-ha-release"
+  helm install --name my-pubsubplus-ha-release <chart-location>
 ```
 
 <br/>
-Now check for dependencies before going ahead with a deployment: the Solace deployment may depend on the presence of Kubernetes objects, such as a StorageClass and ImagePullSecrets. These need to be created first if required.
+Now check for dependencies before going ahead with a deployment: your deployment may depend on the presence of Kubernetes objects, such as a StorageClass and ImagePullSecrets. These need to be created first if required.
 
 #### Ensure a StorageClass is available
 
-The Solace deployment uses disk storage for logging, configuration, guaranteed messaging and other purposes. The use of a persistent storage is recommended, otherwise if a pod-local storage is used data will be lost with the loss of a pod.
+The PubSub+ deployment uses disk storage for logging, configuration, guaranteed messaging and other purposes. The use of a persistent storage is recommended, otherwise if a pod-local storage is used data will be lost with the loss of a pod.
 
 A [StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/ ) is used to obtain a persistent storage that is external to the pod.
 
@@ -161,7 +161,7 @@ For a list of of available StorageClasses, execute
 kubectl get storageclass
 ```
 
-It is expected that there is at least one StorageClass available. By default the "solace" chart is configured to use the StorageClass `standard`, adjust the `storage.useStorageClass` value if necessary.
+It is expected that there is at least one StorageClass available. Unless otherwise configured, the "pubsubplus" chart will try to use the PKS environment default StorageClass - define the `storage.useStorageClass` value if necessary.
 
 Refer to your PKS environment's documentation if a StorageClass needs to be created or to understand the differences if there are multiple options.
 
@@ -182,7 +182,7 @@ Then set the `image.pullSecretName` value to `<pull-secret-name>`.
 
 #### Use Helm to install the deployment
 
-There are two options to use the "solace" Helm chart:
+There are two options to use the "pubsubplus" Helm chart:
 
 a) From a local clone of this GitHub project; or
 <br/>
@@ -190,20 +190,20 @@ b) From a Helm Chart Repository.
 
 The following non-HA and HA deployment examples use option a), a local clone.
 
-If using a Helm Chart Repository, such as Harbor, first package the "solace" Helm chart and load it into your Helm Chart Repository. 
-
+If using a Helm Chart Repository, such as Harbor, first package the "pubsubplus" Helm chart and load it into your Helm Chart Repository. 
 ```sh
 cd ~/workspace/solace-pks
 # Create a package
-helm package solace
+helm package pubsubplus
 
 # Refer to your Repository's documentation how to load the chart
 :
 ``` 
-Then replace `solace` in the following examples with the path of the "solace" chart in your Repository:
+
+Then replace `pubsubplus` in the following examples with the path of the "pubsubplus" chart in your Repository:
 ```
 # No need to cd ~/workspace/solace-pks, can be executed from anywhere
-helm install solace ... ===> helm install <repo>/<path-of-the-solace-chart> ...
+helm install pubsubplus ... ===> helm install <repo>/<path-of-the-pubsubplus-chart> ...
 ```
 
 ##### Single-node non-HA deployment
@@ -214,7 +214,7 @@ The default values in the `values.yaml` file in this repo configure a small sing
 # non-HA deployment
 cd ~/workspace/solace-pks
 # Use contents of default values.yaml and override redundancy (if needed) and the admin password
-helm install solace --name my-solace-nonha-release \
+helm install pubsubplus --name my-pubsubplus-nonha-release \
                --set solace.redundancy=false,solace.usernameAdminPassword=Ch@ngeMe
 # Wait until the pod is running and ready and the active event broker pod label is "active=true"
 watch kubectl get pods --show-labels
@@ -228,7 +228,7 @@ The only difference to the non-HA deployment in the simple case is to set `solac
 # HA deployment
 cd ~/workspace/solace-pks
 # Use contents of values.yaml and override redundancy (if needed) and the admin password
-helm install solace --name my-solace-ha-release \
+helm install pubsubplus --name my-pubsubplus-ha-release \
                --set solace.redundancy=true,solace.usernameAdminPassword=Ch@ngeMe
 # Wait until all pods running and ready and the active event broker pod label is "active=true"
 watch kubectl get pods --show-labels
@@ -238,42 +238,42 @@ To modify a deployment, refer to section [Repairing, Modifying or Upgrading the 
 
 ### Validate the Deployment
 
-Now you can validate your deployment on the command line. In this example an HA cluster is deployed with pod/XXX-XXX-solace-0 being the active event broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-solace-ha-release".
+Now you can validate your deployment on the command line. In this example an HA cluster is deployed with pod/XXX-XXX-pubsubplus-0 being the active event broker/pod. The notation XXX-XXX is used for the unique release name, e.g: "my-pubsubplus-ha-release".
 
 ```sh
 prompt:~$ kubectl get statefulsets,services,pods,pvc,pv
-NAME                              READY   AGE
-statefulset.apps/XXX-XXX-solace   3/3     9m57s
+NAME                                  READY   AGE
+statefulset.apps/XXX-XXX-pubsubplus   3/3     9m57s
 
 NAME                               TYPE           CLUSTER-IP       EXTERNAL-IP       PORT(S)                                                                                                                AGE
 service/kubernetes                 ClusterIP      10.100.200.1     <none>            443/TCP                                                                                                                24d
-service/XXX-XXX-solace             LoadBalancer   10.100.200.209   104.197.193.161   22:32650/TCP,8080:31816/TCP,55555:31692/TCP,55003:32625/TCP,55443:32588/TCP,943:30580/TCP,80:30672/TCP,443:32736/TCP   9m57s
-service/XXX-XXX-solace-discovery   ClusterIP      None             <none>            8080/TCP                                                                                                               9m57s
+service/XXX-XXX-pubsubplus             LoadBalancer   10.100.200.209   104.197.193.161   22:32650/TCP,8080:31816/TCP,55555:31692/TCP,55003:32625/TCP,55443:32588/TCP,943:30580/TCP,80:30672/TCP,443:32736/TCP   9m57s
+service/XXX-XXX-pubsubplus-discovery   ClusterIP      None             <none>            8080/TCP                                                                                                               9m57s
 
-NAME                   READY   STATUS    RESTARTS   AGE
-pod/XXX-XXX-solace-0   1/1     Running   0          9m57s
-pod/XXX-XXX-solace-1   1/1     Running   0          9m57s
-pod/XXX-XXX-solace-2   1/1     Running   0          9m57s
+NAME                       READY   STATUS    RESTARTS   AGE
+pod/XXX-XXX-pubsubplus-0   1/1     Running   0          9m57s
+pod/XXX-XXX-pubsubplus-1   1/1     Running   0          9m57s
+pod/XXX-XXX-pubsubplus-2   1/1     Running   0          9m57s
 
-NAME                                          STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
-persistentvolumeclaim/data-XXX-XXX-solace-0   Bound    pvc-3c294e76-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
-persistentvolumeclaim/data-XXX-XXX-solace-1   Bound    pvc-3c2c5d8b-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
-persistentvolumeclaim/data-XXX-XXX-solace-2   Bound    pvc-3c310ba4-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
+NAME                                              STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+persistentvolumeclaim/data-XXX-XXX-pubsubplus-0   Bound    pvc-3c294e76-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
+persistentvolumeclaim/data-XXX-XXX-pubsubplus-1   Bound    pvc-3c2c5d8b-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
+persistentvolumeclaim/data-XXX-XXX-pubsubplus-2   Bound    pvc-3c310ba4-860d-11e9-b50a-42010a000b26   20Gi       RWO            standard       9m57s
 
 NAME                                                        CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM                           STORAGECLASS   REASON   AGE
-persistentvolume/pvc-3c294e76-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-solace-0   standard                9m44s
-persistentvolume/pvc-3c2c5d8b-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-solace-1   standard                9m44s
-persistentvolume/pvc-3c310ba4-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-solace-2   standard                9m54s
+persistentvolume/pvc-3c294e76-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-pubsubplus-0   standard                9m44s
+persistentvolume/pvc-3c2c5d8b-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-pubsubplus-1   standard                9m44s
+persistentvolume/pvc-3c310ba4-860d-11e9-b50a-42010a000b26   20Gi       RWO            Delete           Bound    default/data-XXX-XXX-pubsubplus-2   standard                9m54s
 
-prompt:~$ kubectl describe service XXX-XX-solace
-Name:                     XXX-XXX-solace
+prompt:~$ kubectl describe service XXX-XX-pubsubplus
+Name:                     XXX-XXX-pubsubplus
 Namespace:                default
-Labels:                   app=solace
-                          chart=solace-1.0.1
+Labels:                   app=pubsubplus
+                          chart=pubsubplus-1.0.1
                           heritage=Tiller
                           release=XXX-XXX
 Annotations:              <none>
-Selector:                 active=true,app=solace,release=XXX-XXX
+Selector:                 active=true,app=pubsubplus,release=XXX-XXX
 Type:                     LoadBalancer
 IP:                       10.100.200.209
 LoadBalancer Ingress:     104.197.193.161
@@ -303,7 +303,7 @@ Refer to the [Management Tools section](//docs.solace.com/Management-Tools.htm )
 
 Use the Load Balancer's external Public IP at port 8080 to access these services.
 
-### Solace CLI access
+### CLI access
 
 You can SSH into the active event broker as the `admin` user using the Load Balancer's external Public IP:
 
@@ -327,21 +327,21 @@ https://solace.com/contact-us/
 
 Operating Mode: Message Routing Node
 
-XXX-XXX-solace-0>
+XXX-XXX-pubsubplus-0>
 ```
 
 In an HA deployment, for CLI access to the individual event broker nodes use:
 
 ```sh
-kubectl exec -it XXX-XXX-solace-<pod-ordinal> -- bash -c "ssh -p 2222 admin@localhost"
+kubectl exec -it XXX-XXX-pubsubplus-<pod-ordinal> -- bash -c "ssh -p 2222 admin@localhost"
 ```
 
-### Solace nodes SSH access
+### PubSub+ nodes SSH access
 
 For SSH access to individual event broker nodes use:
 
 ```sh
-kubectl exec -it XXX-XXX-solace-<pod-ordinal> bash
+kubectl exec -it XXX-XXX-pubsubplus-<pod-ordinal> bash
 ```
 
 ## Viewing contrainer logs
@@ -349,13 +349,13 @@ kubectl exec -it XXX-XXX-solace-<pod-ordinal> bash
 Logs from the currently running container:
 
 ```sh
-kubectl logs XXX-XXX-solace-0 -c solace   # add -f flag to follow real-time
+kubectl logs XXX-XXX-pubsubplus-0 -c solace   # add -f flag to follow real-time
 ```
 
 Logs from the previously terminated container:
 
 ```sh
-kubectl logs XXX-XXX-solace-0 -c solace -p
+kubectl logs XXX-XXX-pubsubplus-0 -c solace -p
 ```
 
 ## Testing data access to the event broker
@@ -374,7 +374,7 @@ To repair the deployment by recreating possibly missing artifacts including a de
 
 ```sh
 cd ~/workspace/solace-pks
-helm upgrade XXXX-XXXX solace \
+helm upgrade XXXX-XXXX pubsubplus \
            [--set <settings-for-original-install>] \
            [-f <value-file-for-original-install>]
 ```
@@ -396,7 +396,7 @@ service:
     - port: 1883
       protocol: TCP
 EOF
-helm upgrade XXXX-XXXX solace \
+helm upgrade XXXX-XXXX pubsubplus \
            [--set <settings-for-original-install>] \
            [-f <value-file-for-original-install>] \
            -f port-update.yaml
@@ -408,7 +408,7 @@ Note: the cluster cannot be modified this way between non-HA and HA deployments,
 
 ### Upgrading the Cluster
 
-To upgrade the version of the Solace event broker Docker image running within a Kubernetes cluster:
+To upgrade the version of the PubSub+ event broker Docker image running within a Kubernetes cluster:
 
 - Add the new version of the event broker to your container registry.
 - Create a simple upgrade.yaml file directory, and add it to the deployment, which will upgrade the pod or all pods in an HA deployment.:
@@ -421,7 +421,7 @@ image:
   tag: NEW.VERSION.XXXXX
   pullPolicy: IfNotPresent
 EOF
-helm upgrade XXXX-XXXX solace \
+helm upgrade XXXX-XXXX pubsubplus \
            [--set <settings-for-original-install>] \
            [-f <value-file-for-original-install>] \
            -f upgrade.yaml
@@ -452,7 +452,7 @@ service/kubernetes             ClusterIP      XX.XX.XX.XX     <none>            
 
 ## Event Broker Deployment Configurations
 
-The solace event broker can be deployed in following scaling (simultaneous connections):
+The PubSub+ event broker can be deployed in following scaling (simultaneous connections):
 
     * `dev`: for development purposes only, no guaranteed performance. Minimum requirements: 1 CPU, 1 GB memory
     * `prod100`: up to 100 connections, minimum requirements: 2 CPU, 2 GB memory
@@ -463,7 +463,7 @@ The solace event broker can be deployed in following scaling (simultaneous conne
     
 Note: the free PubSub+ Standard Edition supports up to `prod1k`.
 
-For the "solace" chart configuration values, refer to the documentation of the [Solace Helm Chart Configuration](solace#solace-helm-chart-configuration)
+For the "pubsubplus" chart configuration values, refer to the documentation of the [Helm Chart Configuration](pubsubplus#helm-chart-configuration)
 
 ## Contributing
 

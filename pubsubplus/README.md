@@ -2,7 +2,7 @@
 
 This chart bootstraps a single-node or HA deployment of a [Solace PubSub+](https://solace.com/products/) message broker on a [Kubernetes](http://kubernetes.io) cluster using the [Helm](https://helm.sh) package manager.
 
-## Solace Helm Chart Configuration
+## Helm Chart Configuration
 
 The following table lists the configurable parameters of the `pubsubplus` chart and their default values.
 
