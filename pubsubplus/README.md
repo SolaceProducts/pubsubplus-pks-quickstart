@@ -4,13 +4,13 @@ This chart bootstraps a single-node or HA deployment of a [Solace PubSub+](https
 
 ## Solace Helm Chart Configuration
 
-The following table lists the configurable parameters of the Solace chart and their default values.
+The following table lists the configurable parameters of the `pubsubplus` chart and their default values.
 
 Specify each parameter using the `--set key=value[,key=value]` argument to `helm install`. For example,
 
 ```bash
 $ helm install --name my-release \
-  --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword <solace-chart-location>
+  --set solace.redundancy=true,solace.usernameAdminPassword=secretpassword <pubsubplus-chart-location>
 ```
 
 | Parameter                      | Description                                                                                             | Default                                                 |
@@ -21,10 +21,10 @@ $ helm install --name my-release \
 | `image.repository`             | The docker repo name and path to the Solace Docker image                                                | `solace/solace-pubsub-standard` from public DockerHub   |
 | `image.tag`                    | The Solace Docker image tag. It is recommended to specify an explicit tag for production use            | `latest`                                                |
 | `image.pullPolicy`             | Image pull policy                                                                                       | `IfNotPresent`                                          |
-| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | not set, meaning no ImagePullSecret used                |
+| `image.pullSecretName`         | Name of the ImagePullSecret to be used with the Docker registry                                         | Not set, meaning no ImagePullSecret used                |
 | `service.type`                 | How to expose the service: options include ClusterIP, NodePort, LoadBalancer                            | `LoadBalancer`                                          |
-| `service.addExternalPort`      | Use to define additional Solace service ports exposed externally, with mapping to pod targetport        | not set                                                 |
+| `service.addExternalPort`      | Use to define additional PubSub+ service ports exposed externally, with mapping to pod targetport       | Not set                                                 |
 | `service.addInternalPort`      | For any matching targetport in 'service.addExternalPort', this property will expose that port at the pod-level first | not set                                    |
 | `storage.persistent`           | `false` to use ephemeral storage at pod level; `true` to request persistent storage through a StorageClass | `true`, false is not recommended for production use  |
-| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes                               | `standard`                                              |
+| `storage.useStorageClass`      | Name of the StorageClass to be used to request persistent storage volumes.                              | Not set, meaning use the default storage class          |
 | `storage.size`                 | Size of the persistent storage to be used; Refer to the Solace documentation for storage configuration requirements | `20Gi`                                      |

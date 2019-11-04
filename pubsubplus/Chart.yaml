@@ -1,0 +1,24 @@
+apiVersion: v1
+description: Deploy Solace PubSub+ Message Broker Singleton or HA redundancy group onto a Kubernetes Cluster
+name: pubsubplus
+version: 1.1.0
+icon: https://solace.com/wp-content/uploads/2018/05/Solace_Logo_Green_360x100-1.png
+maintainers:
+  - name: support
+    email: support@solace.com
+home: https://github.com/SolaceProducts/solace-pks
+sources:
+  - https://github.com/SolaceProducts/solace-pks
+keywords:
+- solace
+- pubsubplus
+- pubsub+
+- advanced event broker
+- event broker
+- event mesh
+- event portal
+- event-driven integration
+- event streaming
+- event management
+- message broker
+- message queue
