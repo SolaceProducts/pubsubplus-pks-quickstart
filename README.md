@@ -2,25 +2,24 @@
 
 ## Purpose of this repository
 
-This repository explains how to install a Solace PubSub+ Software Event Broker in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
+This repository extends the [PubSub+ Kubernetes Quickstart](https://github.com/SolaceProducts/solace-kubernetes-quickstart ) to show you how to install a Solace PubSub+ Software Event Broker in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
 
 The recommended Solace PubSub+ Software Event Broker version is 9.3 or later.
-
-For deploying Solace PubSub+ Software Event Broker in a generic Kubernetes environment, refer to the [Solace Kubernetes Quickstart project](//github.com/SolaceProducts/solace-kubernetes-quickstart ).
 
 ## Description of the Solace PubSub+ Software Event Broker
 
 The Solace PubSub+ software event broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The event broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
 
-Solace PubSub+ software event brokers can be deployed in either a 3-node High-Availability (HA) cluster, or as a single-node non-HA deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
-
 ## How to deploy an event broker onto PKS
 
-In this quick start we go through the steps to set up an event broker either as a single-node instance (default settings), or in a 3-node HA cluster.
+The PubSub+ software event broker can be deployed in either a 3-node High-Availability (HA) cluster, or as a single-node non-HA deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
+
+Detailed documentation of deploying the event broker in a general Kubernetes environment is provided in the [Solace PubSub+ Event Broker on Kubernetes Guide](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
+
 
 ### Step 1: Access to PKS
 
-Perform any prerequisites to access PKS v1.4 or later in your target environment. For specific details, refer to your PKS platform's documentation.
+Perform any prerequisites to access PKS v1.4 or later from your command-line environment. For specific details, refer to your PKS platform's documentation.
 
 Tasks may include:
 
@@ -39,19 +38,13 @@ Verify access to your PKS cluster and the available nodes by running `kubectl ge
 
 We recommend using the [Kubernetes Helm](//github.com/kubernetes/helm/blob/master/README.md ) tool to manage the deployment.
 
-This GitHub repo provides a helper script which will install, setup and configure Helm in your environment if not already there.
+Refer to the [Install and configure Helm](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg#2-install-and-configure-helm) section of the PubSub+ Kubernetes Quickstart.
 
-Clone this repo and execute the `setup_helm` script:
-```sh
-mkdir ~/workspace; cd ~/workspace
-git clone //github.com/SolaceProducts/solace-pks.git
-cd solace-pks    # repo root directory
-./scripts/setup_helm.sh
-```
+<br>
 
 ### Step 3 (Optional): Load the PubSub+ Docker image to a private Docker image registry
 
-**Hint:** You may skip the rest of this step if not using a private Docker image registry (Harbor). The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
+**Hint:** You may skip the rest of this step if not using Harbor or other private Docker registry. The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
 
 To get the PubSub+ event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
 
@@ -60,54 +53,43 @@ To get the PubSub+ event broker Docker image URL, go to the Solace Developer Por
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-If using Harbor for private Docker registry, use the `upload_harbor.sh` script provided in the `scripts` directory. You can pass the PubSub+ image reference as a public Docker image location or a Http download Url (the PubSub+ image `md5` checksum must also be available from the Http download Url). Also provide the Harbor host and project names and additionally, if using signed images set the `DOCKER_CONTENT_TRUST=1` and `DOCKER_CONTENT_TRUST_SERVER` environment variables. Check the script inline comments for defaults.
+#### Loading the PubSub+ Docker image to Harbor
 
-Note: Ensure the project with a user configured exists in Harbor, Docker is logged in to the Harbor server as user, as well as Docker Notary is configured for Harbor if using signed images. Consult your Harbor documentation for details. 
+If using Harbor for private Docker registry, use the `upload_harbor.sh` script from this repo.
+
+Prerequisites:
+* Local installation of [Docker](//docs.docker.com/get-started/ ) is required
+* Project with a user configured exists in Harbor
+* Docker is logged in to the Harbor server as user
+* Docker Notary is configured for Harbor if using signed images. Consult your Harbor documentation for details.
+
+Script options and arguments:
+* PUBSUBPLUS_IMAGE_URL: You can pass the PubSub+ image reference as a public Docker image location (default is `solace/solace-pubsub-standard:latest`) or a Http download Url (the PubSub+ image `md5` checksum must also be available from the Http download Url).
+* HARBOR_HOST: hostname of the Harbor server
+* HARBOR_PROJECT: configured project name on the Harbor server
+* DOCKER_CONTENT_TRUST: if using signed images set the `DOCKER_CONTENT_TRUST=1`
+* DOCKER_CONTENT_TRUST_SERVER: also set if using signed images
 
 ```sh
-cd ~/workspace/solace-pks/scripts
+wget https://raw.githubusercontent.com/SolaceProducts/solace-pks/master/scripts/upload_harbor.sh
+chmod +x upload_harbor.sh
 # Define variables up-front to be passed to the "upload_harbor" script:
 [PUBSUBPLUS_IMAGE_URL=<docker-repo-or-download-link>] \
   HARBOR_HOST=<hostname> \
   [HARBOR_PROJECT=<project>] \
   [DOCKER_CONTENT_TRUST=[0|1] \
   [DOCKER_CONTENT_TRUST_SERVER=<full-server-url-with-port>] \
-  upload_harbor.sh
+  ./upload_harbor.sh
 ## Example-1: upload the latest from Docker Hub to Harbor
 HARBOR_HOST=<harbor-server> ./upload_harbor.sh
 ## Example-2: upload from a Http Url to Harbor
 HARBOR_HOST=<harbor-server> \
-PUBSUBPLUS_IMAGE_URL=https://<server-location>/solace-pubsub-standard-9.1.0.118-docker.tar.gz ./upload_harbor.sh
+PUBSUBPLUS_IMAGE_URL=https://<server-location>/solace-pubsub-standard-9.4.0.118-docker.tar.gz ./upload_harbor.sh
 ```
 
-To load the PubSub+ Docker image into other private Docker registry, follow the general steps below; for specifics, consult the documentation of the registry you are using.
+Note that additional steps may be required if using signed images - follow the prompts.
 
-* Prerequisite: local installation of [Docker](//docs.docker.com/get-started/ ) is required
-* First load the image to the local docker registry:
-```sh
-# Option a): If you have a local tar.gz Docker image file
-sudo docker load -i <solace-pubsub-XYZ-docker>.tar.gz
-# Option b): You can use the public PubSub+ Docker image from Docker Hub
-sudo docker pull solace/solace-pubsub-standard:latest # or specific <TagName>
-
-# Verify the image has been loaded and note the associated "IMAGE ID"
-sudo docker images
-```
-* Login to the private registry:
-```sh
-sudo docker login <private-registry> ...
-```
-* Tag the image with the desired name and tag:
-```sh
-sudo docker tag <image-id> <private-registry>/<path>/<image-name>:<tag>
-```
-* Push the image to the private registry
-```sh
-sudo docker push <private-registry>/<path>/<image-name>:<tag>
-```
-
-Note that additional steps may be required if using signed images.
-
+For general additional information, refer to the [Using private registries](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#using-private-registries) section in the Kubernetes Guide.
 
 ### Step 4: Deploy the event broker
 

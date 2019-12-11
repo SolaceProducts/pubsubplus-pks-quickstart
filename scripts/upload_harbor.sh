@@ -1,5 +1,20 @@
 #!/bin/bash
-set -e  # fail out in case of error encountered
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 ## Params:
 # PUBSUBPLUS_IMAGE_URL can be a Docker repo reference or a download URL
 PUBSUBPLUS_IMAGE_URL="${PUBSUBPLUS_IMAGE_URL:-solace/solace-pubsub-standard:latest}"
@@ -49,33 +64,41 @@ if [ "`docker images | grep solace-`" ] ; then
   docker rmi -f `docker images | grep solace- | awk '{print $3}'` > /dev/null 2>&1
 fi
 # Loading provided PubSub+ image reference
-echo "Trying to load ${PUBSUBPLUS_IMAGE_URL} into local Docker registry:"
+echo "Trying to load ${PUBSUBPLUS_IMAGE_URL} as Docker ref into local Docker registry:"
 if [ -z "`DOCKER_CONTENT_TRUST=0 docker pull ${PUBSUBPLUS_IMAGE_URL}`" ] ; then
-  echo "Found that ${PUBSUBPLUS_IMAGE_URL} was not a docker registry uri, retrying if it is a download link"
-  wget -q -O solos.info -nv  ${PUBSUBPLUS_IMAGE_URL}.md5
-  IFS=' ' read -ra SOLOS_INFO <<< `cat solos.info`
-  MD5_SUM=${SOLOS_INFO[0]}
-  SolOS_LOAD=${SOLOS_INFO[1]}
-  if [ -z ${MD5_SUM} ]; then
-    echo "Missing md5sum for the PubSub+ load - exiting."
-    exit 1
+  echo "Loading as Docker ref failed, retrying to load as local file..."
+  if ! docker load -i ${PUBSUBPLUS_IMAGE_URL} ; then
+    echo "Loading as a local file failed, retrying as a download link"
+    if [[ ${PUBSUBPLUS_IMAGE_URL} == *"solace.com/download"* ]]; then
+      MD5_URL=${PUBSUBPLUS_IMAGE_URL}_MD5
+    else
+      MD5_URL=${PUBSUBPLUS_IMAGE_URL}.md5
+    fi
+    wget -q -O solos.info -nv  ${MD5_URL}
+    IFS=' ' read -ra SOLOS_INFO <<< `cat solos.info`
+    MD5_SUM=${SOLOS_INFO[0]}
+    SolOS_LOAD=${SOLOS_INFO[1]}
+    if [ -z ${MD5_SUM} ]; then
+      echo "Missing md5sum for the PubSub+ load, tried ${PUBSUBPLUS_IMAGE_URL}.md5 - exiting."
+      exit 1
+    fi
+    echo "Reference md5sum is: ${MD5_SUM}"
+    echo "Now downloading URL provided and validating"
+    wget -q -O  ${SolOS_LOAD} ${PUBSUBPLUS_IMAGE_URL}
+    ## Check MD5
+    LOCAL_OS_INFO=`md5sum ${SolOS_LOAD}`
+    IFS=' ' read -ra SOLOS_INFO <<< ${LOCAL_OS_INFO}
+    LOCAL_MD5_SUM=${SOLOS_INFO[0]}
+    if [ -z "${MD5_SUM}" ] || [ "${LOCAL_MD5_SUM}" != "${MD5_SUM}" ]; then
+      echo "Possible corrupt PubSub+ load, md5sum do not match - exiting."
+      exit 1
+    else
+      echo "Successfully downloaded ${SolOS_LOAD}"
+    fi
+    ## Load the image tarball
+    docker load -i ${SolOS_LOAD}
+    rm solos.info ${SolOS_LOAD} # cleanup local files
   fi
-  echo "Reference md5sum is: ${MD5_SUM}"
-  echo "Now downloading URL provided and validating"
-  wget -q -O  ${SolOS_LOAD} ${PUBSUBPLUS_IMAGE_URL}
-  ## Check MD5
-  LOCAL_OS_INFO=`md5sum ${SolOS_LOAD}`
-  
-  IFS=' ' read -ra SOLOS_INFO <<< ${LOCAL_OS_INFO}
-  LOCAL_MD5_SUM=${SOLOS_INFO[0]}
-  if [ -z "${MD5_SUM}" ] || [ "${LOCAL_MD5_SUM}" != "${MD5_SUM}" ]; then
-    echo "Possible corrupt PubSub+ load, md5sum do not match - exiting."
-    exit 1
-  else
-    echo "Successfully downloaded ${SolOS_LOAD}"
-  fi
-  ## Load the image tarball
-  docker load -i ${SolOS_LOAD}
 fi
 # Determine image details
 PUBSUBPLUS_IMAGE_ID=`docker images | grep solace | awk '{print $3}'`
