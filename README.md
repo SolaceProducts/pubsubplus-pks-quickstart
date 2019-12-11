@@ -4,7 +4,7 @@
 
 This repository extends the [PubSub+ Kubernetes Quickstart](https://github.com/SolaceProducts/solace-kubernetes-quickstart ) to show you how to install a Solace PubSub+ Software Event Broker in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
 
-The recommended Solace PubSub+ Software Event Broker version is 9.3 or later.
+The recommended Solace PubSub+ Software Event Broker version is 9.4 or later.
 
 ## Description of the Solace PubSub+ Software Event Broker
 
