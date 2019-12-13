@@ -14,9 +14,9 @@ The Solace PubSub+ software event broker meets the needs of big data, cloud migr
 
 The PubSub+ software event broker can be deployed in either a 3-node High-Availability (HA) cluster, or as a single-node non-HA deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
 
-Detailed documentation of deploying the event broker in a general Kubernetes environment is provided in the [Solace PubSub+ Event Broker on Kubernetes Documentation](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation of deploying the event broker in a general Kubernetes environment is provided in the [Solace PubSub+ Event Broker in Kubernetes Documentation](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
 
-Consult the [Deployment Considerations](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment, then follow these steps to deploy.
+Consult the [Deployment Considerations](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the general Event Broker in Kubernetes Documentation when planning your deployment, then follow these steps to deploy.
 
 ### Step 1: Access to PKS
 
