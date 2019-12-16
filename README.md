@@ -10,7 +10,7 @@ The recommended Solace PubSub+ PubSub+ EBS version is 9.4 or later.
 
 The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Event Broker: Software](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
-## How to deploy the Solace PubSub+ EBS onto PKS
+## How to deploy Solace PubSub+ EBS onto PKS
 
 Solace PubSub+ EBS can be deployed in either a three-node High-Availability (HA) group, or as a single-node Standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
 
@@ -24,12 +24,12 @@ Perform any prerequisites to access PKS v1.4 or later from your command-line env
 
 Tasks may include:
 
-* Getting access to a platform which supports PKS, such as VMware Enterprise PKS
+* Get access to a platform which supports PKS, such as VMware Enterprise PKS
 * Install Kubernetes [`kubectl`](//kubernetes.io/docs/tasks/tools/install-kubectl/ ) tool.
 * Install the PKS CLI client and log in.
 * Create a PKS cluster (for CPU and memory requirements of your Solace PubSub+ EBS target deployment configuration, refer to the [Deployment Configurations](#event-broker-deployment-configurations) section)
 * Configure any necessary environment settings and install certificates
-* Fetch the credentials for the PKS cluster
+* Fetch the credentials of the PKS cluster
 * Perform any necessary setup and configure access if using a private Docker image registry, such as Harbor
 * Perform any necessary setup and configure access if using a Helm chart repository, such as Harbor
 
@@ -43,18 +43,18 @@ Refer to the [Install and configure Helm](https://github.com/SolaceDev/solace-ku
 
 <br>
 
-### Step 3 (Optional): Load the PubSub+ Docker image to a private Docker image registry
+### Step 3 (Optional): Load the PubSub+ EBS Docker image to a private Docker image registry
 
-**Hint:** You may skip the rest of this step if not using Harbor or other private Docker registry. The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
+**Hint:** You may skip the rest of this step if not using Harbor or other private Docker registry. The free PubSub+ EBS Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
 
 To get the PubSub+ EBS Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ EBS as a **docker** image or obtain your version from Solace Support.
 
-| PubSub+ EBS Standard<br/>Docker Image | PubSub+ EBS Enterprise Evaluation Edition<br/>Docker Image
+| PubSub+ EBS Standard<br/>Docker Image | PubSub+ EBS Enterprise Evaluation Edition<br/>Docker Image |
 | :---: | :---: |
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
 
-#### Loading the PubSub+ Docker image to Harbor
+#### Loading the PubSub+ EBS Docker image to Harbor
 
 If using Harbor for private Docker registry, use the `upload_harbor.sh` script from this repo.
 
@@ -120,6 +120,6 @@ This project is licensed under the Apache License, Version 2.0. - See the [LICEN
 
 For more information about Solace technology in general please visit these resources:
 
-- The Solace Developer Portal website at: http://dev.solace.com
-- Understanding [Solace technology.](http://dev.solace.com/tech/)
-- Ask the [Solace community](http://dev.solace.com/community/).
+- The Solace Developer Portal website at: [solace.dev](//solace.dev/)
+- Understanding [Solace technology](//solace.com/products/platform/)
+- Ask the [Solace community](//dev.solace.com/community/).
