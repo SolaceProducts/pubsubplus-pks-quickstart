@@ -1,22 +1,22 @@
-# Install a Solace PubSub+ Software Event Broker onto a Pivotal Container Service (PKS) cluster
+# Install a Solace PubSub+ Event Broker: Software onto a Pivotal Container Service (PKS) cluster
 
 ## Purpose of this repository
 
-This repository extends the [PubSub+ Kubernetes Quickstart](https://github.com/SolaceProducts/solace-kubernetes-quickstart ) to show you how to install a Solace PubSub+ Software Event Broker in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
+This repository extends the [PubSub+ Event Broker: Software on Kubernetes Quickstart](https://github.com/SolaceProducts/solace-kubernetes-quickstart ) to show you how to install a Solace PubSub+ Event Broker: Software (PubSub+ EBS) in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
 
-The recommended Solace PubSub+ Software Event Broker version is 9.4 or later.
+The recommended Solace PubSub+ PubSub+ EBS version is 9.4 or later.
 
-## Description of the Solace PubSub+ Software Event Broker
+## Description of the Solace PubSub+ Event Broker: Software
 
-The Solace PubSub+ software event broker meets the needs of big data, cloud migration, and Internet-of-Things initiatives, and enables microservices and event-driven architecture. Capabilities include topic-based publish/subscribe, request/reply, message queues/queueing, and data streaming for IoT devices and mobile/web apps. The event broker supports open APIs and standard protocols including AMQP, JMS, MQTT, REST, and WebSocket. Moreover, it can be deployed in on-premise datacenters, natively within private and public clouds, and across complex hybrid cloud environments.
+The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ Event Broker: Software](https://solace.com/products/event-broker/software/) efficiently streams event-driven information between applications, IoT devices and user interfaces running in cloud, on-premises, and hybrid environments using open APIs and protocols like AMQP, JMS, MQTT, REST and WebSocket. It can be installed into a variety of public and private clouds, PaaS, and on-premises environments, and brokers in multiple locations can be linked together in an [event mesh](https://solace.com/what-is-an-event-mesh/) to dynamically share events across the distributed enterprise.
 
-## How to deploy an event broker onto PKS
+## How to deploy the Solace PubSub+ EBS onto PKS
 
-The PubSub+ software event broker can be deployed in either a 3-node High-Availability (HA) cluster, or as a single-node non-HA deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA cluster is required.
+Solace PubSub+ EBS can be deployed in either a three-node High-Availability (HA) group, or as a single-node Standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
 
-Detailed documentation of deploying the event broker in a general Kubernetes environment is provided in the [Solace PubSub+ Event Broker in Kubernetes Documentation](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation of deploying Solace PubSub+ EBS in a general Kubernetes environment is provided in the [Solace PubSub+ EBS in Kubernetes Documentation](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
 
-Consult the [Deployment Considerations](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the general Event Broker in Kubernetes Documentation when planning your deployment, then follow these steps to deploy.
+Consult the [Deployment Considerations](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment, then follow these steps to deploy.
 
 ### Step 1: Access to PKS
 
@@ -27,7 +27,7 @@ Tasks may include:
 * Getting access to a platform which supports PKS, such as VMware Enterprise PKS
 * Install Kubernetes [`kubectl`](//kubernetes.io/docs/tasks/tools/install-kubectl/ ) tool.
 * Install the PKS CLI client and log in.
-* Create a PKS cluster (for CPU and memory requirements of your Solace event broker target deployment configuration, refer to the [Deployment Configurations](#event-broker-deployment-configurations) section)
+* Create a PKS cluster (for CPU and memory requirements of your Solace PubSub+ EBS target deployment configuration, refer to the [Deployment Configurations](#event-broker-deployment-configurations) section)
 * Configure any necessary environment settings and install certificates
 * Fetch the credentials for the PKS cluster
 * Perform any necessary setup and configure access if using a private Docker image registry, such as Harbor
@@ -47,9 +47,9 @@ Refer to the [Install and configure Helm](https://github.com/SolaceDev/solace-ku
 
 **Hint:** You may skip the rest of this step if not using Harbor or other private Docker registry. The free PubSub+ Standard Edition is available from the [public Docker Hub registry](//hub.docker.com/r/solace/solace-pubsub-standard/tags/ ), the image reference is `solace/solace-pubsub-standard:<TagName>`.
 
-To get the PubSub+ event broker Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ software event broker as a **docker** image or obtain your version from Solace Support.
+To get the PubSub+ EBS Docker image URL, go to the Solace Developer Portal and download the Solace PubSub+ EBS as a **docker** image or obtain your version from Solace Support.
 
-| PubSub+ Standard<br/>Docker Image | PubSub+ Enterprise Evaluation Edition<br/>Docker Image
+| PubSub+ EBS Standard<br/>Docker Image | PubSub+ EBS Enterprise Evaluation Edition<br/>Docker Image
 | :---: | :---: |
 | Free, up to 1k simultaneous connections,<br/>up to 10k messages per second | 90-day trial version, unlimited |
 | [Download Standard docker image](http://dev.solace.com/downloads/ ) | [Download Evaluation docker image](http://dev.solace.com/downloads#eval ) |
@@ -96,7 +96,7 @@ For general additional information, refer to the [Using private registries](http
 
 ### Step 4: Deploy the event broker
 
-From here follow the steps in [the PubSub+ Kubernetes Quickstart](//github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg#2-install-and-configure-helm) to deploy a single-node or an HA event broker.
+From here follow the steps in [the PubSub+ EBS in Kubernetes Quickstart](//github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg#2-install-and-configure-helm) to deploy a single-node or an HA event broker.
 
 Refer to the detailed PubSub+ Kubernetes documentation for:
 * [Validating the deployment](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
