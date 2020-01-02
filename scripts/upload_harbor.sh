@@ -1,8 +1,23 @@
 #!/bin/bash
-set -e  # fail out in case of error encountered
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 ## Params:
-# SOLACE_IMAGE_URL can be a Docker repo reference or a download URL
-SOLACE_IMAGE_URL="${SOLACE_IMAGE_URL:-solace/solace-pubsub-standard:latest}"
+# PUBSUBPLUS_IMAGE_URL can be a Docker repo reference or a download URL
+PUBSUBPLUS_IMAGE_URL="${PUBSUBPLUS_IMAGE_URL:-solace/solace-pubsub-standard:latest}"
 # HARBOR_HOST is the fully qualified hostname of the Harbor server
 HARBOR_HOST="$HARBOR_HOST"
 # The Harbor project, default is "solace"
@@ -16,7 +31,7 @@ export DOCKER_CONTENT_TRUST_SERVER="${DOCKER_CONTENT_TRUST_SERVER:-https://${HAR
 if [ "$#" -gt  "0" ] ; then
   if [ "$1" = "-h" ] || [ "$1" = "--help" ] ; then
     echo "Usage (define variables to be used for the script first as here):
-    [SOLACE_IMAGE_URL=<docker-repo-or-download-link>] \\
+    [PUBSUBPLUS_IMAGE_URL=<docker-repo-or-download-link>] \\
     HARBOR_HOST=<hostname> \\
     [HARBOR_PROJECT=<project>] \\
     [DOCKER_CONTENT_TRUST=[0|1] \\
@@ -36,61 +51,68 @@ if [[ -z "$HARBOR_HOST" ]]; then
 	exit 1
 fi
 echo "Using:"
-echo "SOLACE_IMAGE_URL=$SOLACE_IMAGE_URL"
+echo "PUBSUBPLUS_IMAGE_URL=$PUBSUBPLUS_IMAGE_URL"
 echo "HARBOR_HOST=$HARBOR_HOST"
 echo "HARBOR_PROJECT=$HARBOR_PROJECT"
 echo "DOCKER_CONTENT_TRUST=$DOCKER_CONTENT_TRUST"
 echo "DOCKER_CONTENT_TRUST_SERVER=$DOCKER_CONTENT_TRUST_SERVER"
 echo
 echo "#############################################################"
-# Remove any existing Solace image from local docker registry
+# Remove any existing PubSub+ image from local docker registry
 if [ "`docker images | grep solace-`" ] ; then
-  echo "Removing existing Solace images from local docker repo"
+  echo "Removing existing PubSub+ images from local docker repo"
   docker rmi -f `docker images | grep solace- | awk '{print $3}'` > /dev/null 2>&1
 fi
-# Loading provided Solace image reference
-echo "Trying to load ${SOLACE_IMAGE_URL} into local Docker registry:"
-if [ -z "`DOCKER_CONTENT_TRUST=0 docker pull ${SOLACE_IMAGE_URL}`" ] ; then
-  echo "Found that ${SOLACE_IMAGE_URL} was not a docker registry uri, retrying if it is a download link"
-  wget -q -O solos.info -nv  ${SOLACE_IMAGE_URL}.md5
-  IFS=' ' read -ra SOLOS_INFO <<< `cat solos.info`
-  MD5_SUM=${SOLOS_INFO[0]}
-  SolOS_LOAD=${SOLOS_INFO[1]}
-  if [ -z ${MD5_SUM} ]; then
-    echo "Missing md5sum for the Solace load - exiting."
-    exit 1
+# Loading provided PubSub+ image reference
+echo "Trying to load ${PUBSUBPLUS_IMAGE_URL} as Docker ref into local Docker registry:"
+if [ -z "`DOCKER_CONTENT_TRUST=0 docker pull ${PUBSUBPLUS_IMAGE_URL}`" ] ; then
+  echo "Loading as Docker ref failed, retrying to load as local file..."
+  if ! docker load -i ${PUBSUBPLUS_IMAGE_URL} ; then
+    echo "Loading as a local file failed, retrying as a download link"
+    if [[ ${PUBSUBPLUS_IMAGE_URL} == *"solace.com/download"* ]]; then
+      MD5_URL=${PUBSUBPLUS_IMAGE_URL}_MD5
+    else
+      MD5_URL=${PUBSUBPLUS_IMAGE_URL}.md5
+    fi
+    wget -q -O solos.info -nv  ${MD5_URL}
+    IFS=' ' read -ra SOLOS_INFO <<< `cat solos.info`
+    MD5_SUM=${SOLOS_INFO[0]}
+    SolOS_LOAD=${SOLOS_INFO[1]}
+    if [ -z ${MD5_SUM} ]; then
+      echo "Missing md5sum for the PubSub+ load, tried ${PUBSUBPLUS_IMAGE_URL}.md5 - exiting."
+      exit 1
+    fi
+    echo "Reference md5sum is: ${MD5_SUM}"
+    echo "Now downloading URL provided and validating"
+    wget -q -O  ${SolOS_LOAD} ${PUBSUBPLUS_IMAGE_URL}
+    ## Check MD5
+    LOCAL_OS_INFO=`md5sum ${SolOS_LOAD}`
+    IFS=' ' read -ra SOLOS_INFO <<< ${LOCAL_OS_INFO}
+    LOCAL_MD5_SUM=${SOLOS_INFO[0]}
+    if [ -z "${MD5_SUM}" ] || [ "${LOCAL_MD5_SUM}" != "${MD5_SUM}" ]; then
+      echo "Possible corrupt PubSub+ load, md5sum do not match - exiting."
+      exit 1
+    else
+      echo "Successfully downloaded ${SolOS_LOAD}"
+    fi
+    ## Load the image tarball
+    docker load -i ${SolOS_LOAD}
+    rm solos.info ${SolOS_LOAD} # cleanup local files
   fi
-  echo "Reference md5sum is: ${MD5_SUM}"
-  echo "Now downloading URL provided and validating"
-  wget -q -O  ${SolOS_LOAD} ${SOLACE_IMAGE_URL}
-  ## Check MD5
-  LOCAL_OS_INFO=`md5sum ${SolOS_LOAD}`
-  
-  IFS=' ' read -ra SOLOS_INFO <<< ${LOCAL_OS_INFO}
-  LOCAL_MD5_SUM=${SOLOS_INFO[0]}
-  if [ -z "${MD5_SUM}" ] || [ "${LOCAL_MD5_SUM}" != "${MD5_SUM}" ]; then
-    echo "Possible corrupt Solace load, md5sum do not match - exiting."
-    exit 1
-  else
-    echo "Successfully downloaded ${SolOS_LOAD}"
-  fi
-  ## Load the image tarball
-  docker load -i ${SolOS_LOAD}
 fi
 # Determine image details
-SOLACE_IMAGE_ID=`docker images | grep solace | awk '{print $3}'`
-if [ -z "${SOLACE_IMAGE_ID}" ] ; then
-  echo "Could not load a valid Solace docker image - exiting."
+PUBSUBPLUS_IMAGE_ID=`docker images | grep solace | awk '{print $3}'`
+if [ -z "${PUBSUBPLUS_IMAGE_ID}" ] ; then
+  echo "Could not load a valid PubSub+ docker image - exiting."
   exit 1
 fi
-echo "Loaded ${SOLACE_IMAGE_URL} to local docker repo"
-SOLACE_IMAGE_NAME=`docker images | grep solace | awk '{split($0,a,"solace/"); print a[2]}' | awk '{print $1}'`
-if [ -z $SOLACE_IMAGE_NAME ] ; then SOLACE_IMAGE_NAME=`docker images | grep solace | awk '{print $1}'`; fi
-SOLACE_IMAGE_TAG=`docker images | grep solace | awk '{print $2}'`
-SOLACE_HARBOR_IMAGE=${HARBOR_PROJECT}/${SOLACE_IMAGE_NAME}:${SOLACE_IMAGE_TAG}
+echo "Loaded ${PUBSUBPLUS_IMAGE_URL} to local docker repo"
+PUBSUBPLUS_IMAGE_NAME=`docker images | grep solace | awk '{split($0,a,"solace/"); print a[2]}' | awk '{print $1}'`
+if [ -z $PUBSUBPLUS_IMAGE_NAME ] ; then PUBSUBPLUS_IMAGE_NAME=`docker images | grep solace | awk '{print $1}'`; fi
+PUBSUBPLUS_IMAGE_TAG=`docker images | grep solace | awk '{print $2}'`
+PUBSUBPLUS_HARBOR_IMAGE=${HARBOR_PROJECT}/${PUBSUBPLUS_IMAGE_NAME}:${PUBSUBPLUS_IMAGE_TAG}
 # Tag and load to Harbor now
-docker_hub_solace=${SOLACE_IMAGE_URL}
-docker_harbor_solace="${HARBOR_HOST}/${SOLACE_HARBOR_IMAGE}"
-docker tag $SOLACE_IMAGE_ID "$docker_harbor_solace"
-docker push "$docker_harbor_solace" || { echo "Push to Harbor failed, ensure it is accessible and Docker is logged in with the correct user"; exit 1; }
-echo "Success - Harbor image location: $docker_harbor_solace"
+docker_harbor_pubsubplus="${HARBOR_HOST}/${PUBSUBPLUS_HARBOR_IMAGE}"
+docker tag $PUBSUBPLUS_IMAGE_ID "$docker_harbor_pubsubplus"
+docker push "$docker_harbor_pubsubplus" || { echo "Push to Harbor failed, ensure it is accessible and Docker is logged in with the correct user"; exit 1; }
+echo "Success - Harbor image location: $docker_harbor_pubsubplus"
