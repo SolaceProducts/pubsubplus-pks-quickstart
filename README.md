@@ -2,7 +2,7 @@
 
 ## Purpose of this repository
 
-This repository extends the [PubSub+ Event Broker: Software on Kubernetes Quickstart](https://github.com/SolaceProducts/solace-kubernetes-quickstart ) to show you how to install a Solace PubSub+ Event Broker: Software (PubSub+ EBS) in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
+This repository extends the [PubSub+ Event Broker: Software on Kubernetes Quickstart](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart ) to show you how to install a Solace PubSub+ Event Broker: Software (PubSub+ EBS) in various configurations onto a [Pivotal Container Service (PKS)](//cloud.vmware.com/pivotal-container-service ) cluster.
 
 The recommended Solace PubSub+ PubSub+ EBS version is 9.4 or later.
 
@@ -14,9 +14,9 @@ The [Solace PubSub+ Platform](https://solace.com/products/platform/)'s [PubSub+ 
 
 Solace PubSub+ EBS can be deployed in either a three-node High-Availability (HA) group, or as a single-node Standalone deployment. For simple test environments that need only to validate application functionality, a single instance will suffice. Note that in production, or any environment where message loss cannot be tolerated, an HA deployment is required.
 
-Detailed documentation of deploying Solace PubSub+ EBS in a general Kubernetes environment is provided in the [Solace PubSub+ EBS in Kubernetes Documentation](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md).
+Detailed documentation of deploying Solace PubSub+ EBS in a general Kubernetes environment is provided in the [Solace PubSub+ EBS in Kubernetes Documentation](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md).
 
-Consult the [Deployment Considerations](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-deployment-considerations) section of the Documentation when planning your deployment, then follow these steps to deploy.
+Consult the [Deployment Considerations](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#pubsub-event-broker-software-deployment-considerations) section of the Documentation when planning your deployment, then follow these steps to deploy.
 
 ### Step 1: Access to PKS
 
@@ -39,7 +39,7 @@ Verify access to your PKS cluster and the available nodes by running `kubectl ge
 
 We recommend using the [Kubernetes Helm](//github.com/kubernetes/helm/blob/master/README.md ) tool to manage the deployment.
 
-Refer to the [Install and configure Helm](https://github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg#2-install-and-configure-helm) section of the PubSub+ Kubernetes Quickstart.
+Refer to the [Install and configure Helm](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart#2-install-and-configure-helm) section of the PubSub+ Kubernetes Quickstart.
 
 <br>
 
@@ -72,7 +72,7 @@ Script options and arguments:
 * DOCKER_CONTENT_TRUST_SERVER: also set if using signed images
 
 ```sh
-wget https://raw.githubusercontent.com/SolaceProducts/solace-pks/master/scripts/upload_harbor.sh
+wget https://raw.githubusercontent.com/SolaceProducts/pubsubplus-pks-quickstart/master/scripts/upload_harbor.sh
 chmod +x upload_harbor.sh
 # Define variables up-front to be passed to the "upload_harbor" script:
 [PUBSUBPLUS_IMAGE_URL=<docker-repo-or-download-link>] \
@@ -92,17 +92,17 @@ Note that additional steps may be required if using signed images - follow the p
 
 The script will end with showing the "Harbor image location" in `<your-image-location>:<your-image-tag>` format and this shall be passed to the PubSub+ deployment parameters `image.repository` and `image.tag` respectively.
 
-For general additional information, refer to the [Using private registries](https://github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#using-private-registries) section in the PubSub+ Kubernetes Documentation.
+For general additional information, refer to the [Using private registries](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#using-private-registries) section in the PubSub+ Kubernetes Documentation.
 
 ### Step 4: Deploy the event broker
 
-From here follow the steps in [the PubSub+ EBS in Kubernetes Quickstart](//github.com/SolaceDev/solace-kubernetes-quickstart/tree/HelmReorg#2-install-and-configure-helm) to deploy a single-node or an HA event broker.
+From here follow the steps in [the PubSub+ EBS in Kubernetes Quickstart](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart#3-install-the-solace-pubsub-ebs-with-default-configuration) to deploy a single-node or an HA event broker.
 
 Refer to the detailed PubSub+ Kubernetes documentation for:
-* [Validating the deployment](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
-* [Troubleshooting](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#troubleshooting)
-* [Modifying or Upgrading](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
-* [Deleting the deployment](//github.com/SolaceDev/solace-kubernetes-quickstart/blob/HelmReorg/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
+* [Validating the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#validating-the-deployment); or
+* [Troubleshooting](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#troubleshooting)
+* [Modifying or Upgrading](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#modifying-or-upgrading-a-deployment)
+* [Deleting the deployment](//github.com/SolaceProducts/pubsubplus-kubernetes-quickstart/blob/master/docs/PubSubPlusK8SDeployment.md#deleting-a-deployment)
 
 ## Contributing
 
@@ -110,7 +110,7 @@ Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduc
 
 ## Authors
 
-See the list of [contributors](//github.com/SolaceProducts/solace-pks/graphs/contributors) who participated in this project.
+See the list of [contributors](//github.com/SolaceProducts/pubsubplus-pks-quickstart/graphs/contributors) who participated in this project.
 
 ## License
 
